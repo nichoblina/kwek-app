@@ -4,6 +4,8 @@ A flashcard and multiple-choice quiz app for studying — built with Next.js 16 
 
 Named after *kwek kwek*, the Filipino street food of battered quail eggs. Kwek is kind of like "quick" which could mean like a "flash," a "kwek" card?!
 
+**Live:** https://kwek-app.vercel.app
+
 ## Features
 
 - **Flashcard mode** — 3D flip animation, Easy/Hard confidence rating, shuffle, category filter
