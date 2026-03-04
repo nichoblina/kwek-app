@@ -16,7 +16,7 @@ Named after *kwek kwek*, the Filipino street food of battered quail eggs. 🥚
 ## Running locally
 
 ```bash
-git clone https://github.com/nichoblina/kwek.git
+git clone https://github.com/nichoblina/kwek-app.git
 cd kwek
 npm install
 npm run dev
