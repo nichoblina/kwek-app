@@ -2,7 +2,7 @@
 
 A flashcard and multiple-choice quiz app for studying — built with Next.js 16 and Tailwind CSS v4.
 
-Named after *kwek kwek*, the Filipino street food of battered quail eggs. 🥚
+Named after *kwek kwek*, the Filipino street food of battered quail eggs. Kwek is kind of like "quick" which could mean like a "flash," a "kwek" card?!
 
 ## Features
 
