@@ -143,7 +143,7 @@ export function DeckEditor({ deck, onSave, onCancel }: DeckEditorProps) {
   }
 
   const inputClass =
-    'w-full px-3 py-2.5 rounded-xl border-[1.5px] border-border bg-bg text-text-primary text-sm font-medium focus:outline-none focus:border-text-primary transition-colors duration-150';
+    'w-full px-3 py-2.5 rounded-xl border-[1.5px] border-border bg-bg text-text-primary text-sm font-medium focus:outline-none focus:border-primary transition-colors duration-150';
   const labelClass =
     'block text-[0.75rem] font-semibold text-muted uppercase tracking-wide mb-1.5 font-mono';
 

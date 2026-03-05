@@ -1,7 +1,20 @@
 export type Category = string;
-
+export type Theme = 'default' | 'dark' | 'pink';
 export type ConfidenceRating = "easy" | "hard";
 export type AnswerResult = "correct" | "incorrect";
+
+// ─── Themes ──────────────────────────────────────────────────────────────────
+export interface Settings {
+  theme: Theme;
+  showConfidence: boolean;
+  autoFlipSeconds: number | null; // null = off
+}
+
+export const DEFAULT_SETTINGS: Settings = {
+  theme: 'default',
+  showConfidence: true,
+  autoFlipSeconds: null,
+}
 
 // ─── Cards ───────────────────────────────────────────────────────────────────
 
