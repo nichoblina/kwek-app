@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { SettingsModal } from '@/components/SettingsModal';
 import { useDecks } from '@/hooks/useDecks';
 import { DeckGrid } from '@/components/deck/DeckGrid';
 import { getCategoryColor, getCategoryLabel } from '@/lib/utils';
@@ -11,6 +12,9 @@ const LEGEND_LIMIT = 5;
 export default function Home() {
   // Initialize decks
   const { allDecks, customDecks, hydrated } = useDecks();
+
+  // Initialize settings
+  const [showSettings, setShowSettings] = useState(false);
 
   // Initialize search and filters
   const [search, setSearch] = useState('');
@@ -37,8 +41,11 @@ export default function Home() {
   // Filter deck based on the states
   const filteredDecks = allDecks
     .filter((deck) => {
-      const matchesSearch = deck.name.toLowerCase().includes(search.toLowerCase());
-      const matchesCategory = filterCategory === null || deck.categories.includes(filterCategory);
+      const matchesSearch = deck.name
+        .toLowerCase()
+        .includes(search.toLowerCase());
+      const matchesCategory =
+        filterCategory === null || deck.categories.includes(filterCategory);
       const matchesType =
         filterType === 'all' ||
         (filterType === 'builtin' && deck.isBuiltIn) ||
@@ -48,10 +55,11 @@ export default function Home() {
     .sort((a, b) => {
       let result = 0;
       if (sortBy === 'name') result = a.name.localeCompare(b.name);
-      else if (sortBy === 'createdAt') result = a.createdAt.localeCompare(b.createdAt);
+      else if (sortBy === 'createdAt')
+        result = a.createdAt.localeCompare(b.createdAt);
       else if (sortBy === 'cardCount') result = a.cards.length - b.cards.length;
       return sortOrder === 'asc' ? result : -result;
-    })
+    });
 
   return (
     <div className='max-w-3xl mx-auto px-5 py-10 pb-16'>
@@ -60,18 +68,26 @@ export default function Home() {
         <div className='flex items-start justify-between gap-4 flex-wrap'>
           <div>
             <h1 className='text-[2.6rem] leading-none tracking-tight font-logo text-primary'>
-              kwek<span className='text-[1.3rem] align-super ml-0.5'>2</span>
+              kwek
             </h1>
             <p className='text-sm text-muted mt-1.5 font-medium'>
               Flashcards & quizzes — study smarter
             </p>
           </div>
-          <Link
-            href='/decks/new'
-            className='px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-150 hover:opacity-80 shrink-0 bg-text-primary text-bg'
-          >
-            + New Deck
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowSettings(true)}
+              className='px-5 py-2.5 rounded-xl font-bold text-sm border-[1.5px] border-border hover:border-primary hover:bg-primary hover:text-white transition-all'
+            >
+              ⚙ Settings
+            </button>
+            <Link
+              href='/decks/new'
+              className='px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-150 shrink-0 bg-primary text-white hover:opacity-80 border-[1.5px] border-transparent'
+            >
+              + New Deck
+            </Link>
+          </div>
         </div>
 
         {/* Category legend */}
@@ -100,55 +116,61 @@ export default function Home() {
       {/* Search & filter */}
       {hydrated && (
         <div className='mb-6 flex flex-col gap-3'>
-          <input 
-            type="text" 
+          <input
+            type='text'
             placeholder='Search decks...'
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className='w-full px-4 py-2.5 rounded-xl border-[1.5px] border-border bg-card text-sm font-medium focus:outline-none focus:border-text-primary'
+            className='w-full px-4 py-2.5 rounded-xl border-[1.5px] border-border bg-card text-sm font-medium focus:outline-none focus:border-primary'
           />
           <div className='flex gap-2 flex-wrap'>
             {/* Sort by */}
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as 'name' | 'createdAt' | 'cardCount')}
-              className='px-3 py-2 rounded-xl border-[1.5px] border-border bg-card text-sm font-medium focus:outline-none'
+              onChange={(e) =>
+                setSortBy(e.target.value as 'name' | 'createdAt' | 'cardCount')
+              }
+              className='px-3 py-2 rounded-xl border-[1.5px] border-border bg-card text-sm font-medium focus:outline-none focus:border-primary hover:border-primary transition-colors cursor-pointer'
             >
-              <option value="createdAt">Date created</option>
-              <option value="name">Alphabetical</option>
-              <option value="cardCount">Card count</option>
+              <option value='createdAt'>Date created</option>
+              <option value='name'>Alphabetical</option>
+              <option value='cardCount'>Card count</option>
             </select>
 
             {/* Sort order */}
             <select
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-              className='px-3 py-2 rounded-xl border-[1.5px] border-border bg-card text-sm font-medium focus:outline-none'
+              className='px-3 py-2 rounded-xl border-[1.5px] border-border bg-card text-sm font-medium focus:outline-none focus:border-primary hover:border-primary transition-colors cursor-pointer'
             >
-              <option value="desc">Desc</option>
-              <option value="asc">Asc</option>
+              <option value='desc'>Desc</option>
+              <option value='asc'>Asc</option>
             </select>
 
             {/* Filter by type */}
             <select
               value={filterType}
-              onChange={(e) => setFilterType(e.target.value as 'all' | 'builtin' | 'custom')}
-              className='px-3 py-2 rounded-xl border-[1.5px] border-border bg-card text-sm font-medium focus:outline-none'
+              onChange={(e) =>
+                setFilterType(e.target.value as 'all' | 'builtin' | 'custom')
+              }
+              className='px-3 py-2 rounded-xl border-[1.5px] border-border bg-card text-sm font-medium focus:outline-none focus:border-primary hover:border-primary transition-colors cursor-pointer'
             >
-              <option value="all">All</option>
-              <option value="builtin">Built-in</option>
-              <option value="custom">Custom</option>
+              <option value='all'>All</option>
+              <option value='builtin'>Built-in</option>
+              <option value='custom'>Custom</option>
             </select>
 
             {/* Filter by category */}
             <select
               value={filterCategory ?? ''}
               onChange={(e) => setFilterCategory(e.target.value || null)}
-              className='px-3 py-2 rounded-xl border-[1.5px] border-border bg-card text-sm font-medium focus:outline-none'
+              className='px-3 py-2 rounded-xl border-[1.5px] border-border bg-card text-sm font-medium focus:outline-none focus:border-primary hover:border-primary transition-colors cursor-pointer'
             >
-              <option value="">All categories</option>
+              <option value=''>All categories</option>
               {categories.map((cat) => (
-                <option key={cat} value={cat}>{getCategoryLabel(cat)}</option>
+                <option key={cat} value={cat}>
+                  {getCategoryLabel(cat)}
+                </option>
               ))}
             </select>
           </div>
@@ -182,6 +204,9 @@ export default function Home() {
           )}
         </>
       )}
+
+      {/* Settings modal */}
+      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
     </div>
   );
 }
