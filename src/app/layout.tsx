@@ -34,6 +34,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${outfit.variable} ${jetbrainsMono.variable} ${paytoneOne.variable} antialiased`}>
         {children}
+        <footer className='text-center py-6 text-[0.75rem] text-muted font-medium'>
+          built by nicholai oblina <span className='mx-2'>·</span> {new Date().getFullYear()}
+        </footer>
       </body>
     </html>
   );
