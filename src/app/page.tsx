@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useDecks } from '@/hooks/useDecks';
 import { DeckGrid } from '@/components/deck/DeckGrid';
@@ -8,7 +9,21 @@ import { getCategoryColor, getCategoryLabel } from '@/lib/utils';
 const LEGEND_LIMIT = 5;
 
 export default function Home() {
+  // Initialize decks
   const { allDecks, customDecks, hydrated } = useDecks();
+
+  // Initialize search and filters
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'cardCount'>(
+    'createdAt',
+  );
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [filterCategory, setFilterCategory] = useState<string | null>(null);
+  const [filterType, setFilterType] = useState<'all' | 'builtin' | 'custom'>(
+    'all',
+  );
+
+  // Initialize categories
   const categoryCounts = allDecks
     .flatMap((d) => d.cards)
     .reduce<Record<string, number>>((acc, card) => {
@@ -16,8 +31,27 @@ export default function Home() {
       return acc;
     }, {});
   const categories = Object.entries(categoryCounts)
-    .sort((a,b) => b[1] = a[1])
+    .sort((a, b) => b[1] - a[1])
     .map(([cat]) => cat);
+
+  // Filter deck based on the states
+  const filteredDecks = allDecks
+    .filter((deck) => {
+      const matchesSearch = deck.name.toLowerCase().includes(search.toLowerCase());
+      const matchesCategory = filterCategory === null || deck.categories.includes(filterCategory);
+      const matchesType =
+        filterType === 'all' ||
+        (filterType === 'builtin' && deck.isBuiltIn) ||
+        (filterType === 'custom' && !deck.isBuiltIn);
+      return matchesSearch && matchesCategory && matchesType;
+    })
+    .sort((a, b) => {
+      let result = 0;
+      if (sortBy === 'name') result = a.name.localeCompare(b.name);
+      else if (sortBy === 'createdAt') result = a.createdAt.localeCompare(b.createdAt);
+      else if (sortBy === 'cardCount') result = a.cards.length - b.cards.length;
+      return sortOrder === 'asc' ? result : -result;
+    })
 
   return (
     <div className='max-w-3xl mx-auto px-5 py-10 pb-16'>
@@ -63,6 +97,64 @@ export default function Home() {
         )}
       </div>
 
+      {/* Search & filter */}
+      {hydrated && (
+        <div className='mb-6 flex flex-col gap-3'>
+          <input 
+            type="text" 
+            placeholder='Search decks...'
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className='w-full px-4 py-2.5 rounded-xl border-[1.5px] border-border bg-card text-sm font-medium focus:outline-none focus:border-text-primary'
+          />
+          <div className='flex gap-2 flex-wrap'>
+            {/* Sort by */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as 'name' | 'createdAt' | 'cardCount')}
+              className='px-3 py-2 rounded-xl border-[1.5px] border-border bg-card text-sm font-medium focus:outline-none'
+            >
+              <option value="createdAt">Date created</option>
+              <option value="name">Alphabetical</option>
+              <option value="cardCount">Card count</option>
+            </select>
+
+            {/* Sort order */}
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+              className='px-3 py-2 rounded-xl border-[1.5px] border-border bg-card text-sm font-medium focus:outline-none'
+            >
+              <option value="desc">Desc</option>
+              <option value="asc">Asc</option>
+            </select>
+
+            {/* Filter by type */}
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value as 'all' | 'builtin' | 'custom')}
+              className='px-3 py-2 rounded-xl border-[1.5px] border-border bg-card text-sm font-medium focus:outline-none'
+            >
+              <option value="all">All</option>
+              <option value="builtin">Built-in</option>
+              <option value="custom">Custom</option>
+            </select>
+
+            {/* Filter by category */}
+            <select
+              value={filterCategory ?? ''}
+              onChange={(e) => setFilterCategory(e.target.value || null)}
+              className='px-3 py-2 rounded-xl border-[1.5px] border-border bg-card text-sm font-medium focus:outline-none'
+            >
+              <option value="">All categories</option>
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>{getCategoryLabel(cat)}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+
       {/* All decks */}
       {!hydrated ? (
         <div className='text-muted text-sm font-medium'>Loading decks…</div>
@@ -70,9 +162,9 @@ export default function Home() {
         <>
           <section className='mb-8'>
             <h2 className='font-mono text-[0.7rem] font-semibold uppercase tracking-widest text-muted mb-4'>
-              All Decks ({allDecks.length})
+              All Decks ({filteredDecks.length})
             </h2>
-            <DeckGrid decks={allDecks} showEmptyState={false} />
+            <DeckGrid decks={filteredDecks} showEmptyState={false} />
           </section>
 
           {customDecks.length === 0 && (
