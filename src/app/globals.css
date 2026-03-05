@@ -4,7 +4,9 @@
   --font-sans: var(--font-outfit);
   --font-mono: var(--font-jetbrains-mono);
   --font-logo: var(--font-bubblegum);
+}
 
+@theme {
   --color-bg: #f7f4ef;
   --color-card: #ffffff;
   --color-border: #e8e2d9;
@@ -60,4 +62,26 @@ code {
 
 .fade-in-up {
   animation: fadeInUp 0.25s ease;
+}
+
+/* ── Dark theme ────────────────────────────────────────────────────────────── */
+html.dark {
+  --color-bg: #1a1814;
+  --color-card: #252220;
+  --color-border: #3a3530;
+  --color-text-primary: #f7f4ef;
+  --color-muted: #6b6560;
+  --color-surface: #2a2520;
+}
+
+/* ── Pink theme ────────────────────────────────────────────────────────────── */
+html.pink {
+  --color-bg: #fdf0f5;
+  --color-card: #ffffff;
+  --color-border: #f0c8dc;
+  --color-text-primary: #3d1a28;
+  --color-muted: #b08898;
+  --color-primary: #e84d8a;
+  --color-secondary: #9b59b6;
+  --color-surface: #fce4ee;
 }
