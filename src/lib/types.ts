@@ -1,11 +1,4 @@
-export type Category =
-  | "java"
-  | "spring"
-  | "jpa"
-  | "devsecops"
-  | "cs"
-  | "general"
-  | string;
+export type Category = string;
 
 export type ConfidenceRating = "easy" | "hard";
 export type AnswerResult = "correct" | "incorrect";
