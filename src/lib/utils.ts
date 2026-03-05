@@ -14,27 +14,21 @@ export function shuffleArray<T>(arr: T[]): T[] {
 }
 
 export function getCategoryColor(cat: Category): string {
-  const map: Record<string, string> = {
-    java: "var(--color-primary)",
-    spring: "var(--color-green)",
-    jpa: "var(--color-secondary)",
-    devsecops: "var(--color-yellow)",
-    cs: "var(--color-muted)",
-    general: "var(--color-muted)",
-  };
-  return map[cat] ?? "var(--color-muted)";
+  const palette = [
+    "var(--color-primary)",
+    "var(--color-green)",
+    "var(--color-secondary)",
+    "var(--color-yellow)",
+    "var(--color-muted)",
+    "var(--color-muted)",
+  ];
+  const hash = [...cat].reduce((acc, char) => acc + char.charCodeAt(0), 0);
+
+  return palette[hash % palette.length];
 }
 
 export function getCategoryLabel(cat: Category): string {
-  const map: Record<string, string> = {
-    java: "Java",
-    spring: "Spring",
-    jpa: "JPA/JDBC",
-    devsecops: "DevSecOps",
-    cs: "CS Fundamentals",
-    general: "General",
-  };
-  return map[cat] ?? cat;
+  return cat.charAt(0).toUpperCase() + cat.slice(1);
 }
 
 export function deriveCategoriesFromCards(
