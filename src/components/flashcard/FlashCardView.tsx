@@ -97,7 +97,7 @@ export function FlashCardView({
                 dangerouslySetInnerHTML={{ __html: frontContent }}
               />
             ) : (
-              <div className="text-base font-semibold leading-relaxed text-text-primary">
+              <div className="text-base font-semibold leading-relaxed text-text-primary whitespace-pre-wrap">
                 {frontContent}
               </div>
             )}
@@ -123,7 +123,7 @@ export function FlashCardView({
                 dangerouslySetInnerHTML={{ __html: backContent }}
               />
             ) : (
-              <div className="text-sm font-medium leading-relaxed text-text-primary">
+              <div className="text-sm font-medium leading-relaxed text-text-primary whitespace-pre-wrap">
                 {backContent}
               </div>
             )}

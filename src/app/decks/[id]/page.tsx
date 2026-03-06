@@ -4,7 +4,6 @@ import { use } from "react";
 import Link from "next/link";
 import { useDecks } from "@/hooks/useDecks";
 import { Badge, CategoryDot } from "@/components/ui/Badge";
-import { hasQuizData } from "@/lib/types";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -37,8 +36,7 @@ export default function DeckDetailPage({ params }: PageProps) {
     );
   }
 
-  const quizCards = deck.cards.filter(hasQuizData);
-  const hasQuiz = quizCards.length > 0;
+  const hasQuiz = deck.cards.length > 0;
 
   return (
     <div className="max-w-3xl mx-auto px-5 py-10 pb-16">
@@ -138,10 +136,10 @@ export default function DeckDetailPage({ params }: PageProps) {
               Quiz Mode
             </h2>
             <p className="text-sm text-muted mt-1 leading-relaxed">
-              Multiple-choice questions with instant feedback and explanations.
+              Multiple-choice, true/false, and identification questions with instant feedback.
             </p>
             <div className="mt-4 font-mono text-[0.68rem] font-semibold text-muted uppercase tracking-wider">
-              {quizCards.length} questions →
+              {deck.cards.length} questions →
             </div>
           </Link>
         ) : (
@@ -149,7 +147,7 @@ export default function DeckDetailPage({ params }: PageProps) {
             <div className="text-2xl mb-3">✏️</div>
             <h2 className="font-bold text-lg text-text-primary">Quiz Mode</h2>
             <p className="text-sm text-muted mt-1 leading-relaxed">
-              Add multiple-choice options to cards to enable quiz mode.
+              Add at least one card to enable quiz mode.
             </p>
             {!deck.isBuiltIn && (
               <Link

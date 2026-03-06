@@ -83,7 +83,7 @@ export default function Home() {
             </button>
             <Link
               href='/decks/new'
-              className='px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-150 shrink-0 bg-primary text-white hover:opacity-80 border-[1.5px] border-transparent'
+              className='px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-150 shrink-0 bg-cta text-cta-text hover:opacity-80 border-[1.5px] border-transparent'
             >
               + New Deck
             </Link>
@@ -196,7 +196,7 @@ export default function Home() {
               </p>
               <Link
                 href='/decks/new'
-                className='inline-block px-5 py-2 rounded-xl font-bold text-sm transition-all duration-150 hover:opacity-80 bg-text-primary text-bg'
+                className='inline-block px-5 py-2 rounded-xl font-bold text-sm transition-all duration-150 hover:opacity-80 bg-cta text-cta-text'
               >
                 + Create Deck
               </Link>

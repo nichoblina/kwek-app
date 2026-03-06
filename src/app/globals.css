@@ -17,6 +17,9 @@
   --color-green: #2a9d5c;
   --color-yellow: #e8a020;
   --color-surface: #f0ece5;
+  /* CTA button colour — dark in light/pink themes, primary in dark theme */
+  --color-cta: var(--color-text-primary);
+  --color-cta-text: var(--color-bg);
 }
 
 body {
@@ -72,6 +75,8 @@ html.dark {
   --color-text-primary: #f7f4ef;
   --color-muted: #6b6560;
   --color-surface: #2a2520;
+  --color-cta: var(--color-primary);
+  --color-cta-text: #ffffff;
 }
 
 /* ── Pink theme ────────────────────────────────────────────────────────────── */

@@ -14,7 +14,7 @@ export function DeckGrid({ decks, showEmptyState = true }: DeckGridProps) {
         <p className="text-muted text-sm font-medium mb-3">No custom decks yet.</p>
         <Link
           href="/decks/new"
-          className="inline-block px-5 py-2 rounded-xl font-bold text-sm transition-all duration-150 hover:opacity-80 bg-text-primary text-bg"
+          className="inline-block px-5 py-2 rounded-xl font-bold text-sm transition-all duration-150 hover:opacity-80 bg-cta text-cta-text"
         >
           + Create your first deck
         </Link>

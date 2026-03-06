@@ -72,15 +72,24 @@ export function DeckEditor({ deck, onSave, onCancel }: DeckEditorProps) {
     if (!cardForm.front.trim()) cardErrors.front = 'Front is required.';
     if (!cardForm.back.trim()) cardErrors.back = 'Back is required.';
     if (cardForm.showQuiz) {
-      cardForm.options.forEach((o, i) => {
-        if (!o.trim())
-          cardErrors[`opt${i}`] = `Option ${LETTERS[i]} is required.`;
-      });
+      if (!cardForm.options[0].trim()) {
+        cardErrors.opt0 = 'Option A is required.';
+      }
+      // The selected correct answer must actually be filled in
+      if (cardForm.options[0].trim() && !cardForm.options[cardForm.answerIndex].trim()) {
+        cardErrors.answer = `Option ${LETTERS[cardForm.answerIndex]} is selected as correct but is empty.`;
+      }
     }
     if (Object.keys(cardErrors).length > 0) {
       setErrors((prev) => ({ ...prev, ...cardErrors }));
       return;
     }
+
+    // Build options: only keep non-empty slots
+    const filledOptions = cardForm.options.map((o) => o.trim()).filter(Boolean);
+    // Remap answerIndex to the new (shorter) array
+    const selectedAnswer = cardForm.options[cardForm.answerIndex].trim();
+    const newAnswerIndex = Math.max(0, filledOptions.indexOf(selectedAnswer));
 
     const newCard: SimpleCard = {
       id: editingCardId ?? generateId(),
@@ -88,14 +97,9 @@ export function DeckEditor({ deck, onSave, onCancel }: DeckEditorProps) {
       category: cardForm.category,
       front: cardForm.front.trim(),
       back: cardForm.back.trim(),
-      ...(cardForm.showQuiz && {
-        options: cardForm.options.map((o) => o.trim()) as [
-          string,
-          string,
-          string,
-          string,
-        ],
-        answerIndex: cardForm.answerIndex,
+      ...(cardForm.showQuiz && filledOptions.length > 0 && {
+        options: filledOptions,
+        answerIndex: newAnswerIndex,
         explanation: cardForm.explanation.trim() || undefined,
       }),
     };
@@ -115,6 +119,7 @@ export function DeckEditor({ deck, onSave, onCancel }: DeckEditorProps) {
       delete next.front;
       delete next.back;
       delete next.cards;
+      delete next.answer;
       LETTERS.forEach((_, i) => delete next[`opt${i}`]);
       return next;
     });
@@ -122,13 +127,15 @@ export function DeckEditor({ deck, onSave, onCancel }: DeckEditorProps) {
 
   function startEditCard(card: SimpleCard) {
     setEditingCardId(card.id);
+    // Pad saved options (may be 1–4) back to 4 slots for the form
+    const padded = [...(card.options ?? []), '', '', '', ''].slice(0, 4) as [string, string, string, string];
     setCardForm({
       front: card.front,
       back: card.back,
       category: card.category,
-      showQuiz: !!(card.options && card.options.length === 4),
-      options: card.options ?? ['', '', '', ''],
-      answerIndex: card.answerIndex ?? 0,
+      showQuiz: !!(card.options && card.options.length >= 1),
+      options: padded,
+      answerIndex: (card.answerIndex ?? 0) as 0 | 1 | 2 | 3,
       explanation: card.explanation ?? '',
     });
   }
@@ -203,7 +210,7 @@ export function DeckEditor({ deck, onSave, onCancel }: DeckEditorProps) {
                   <p className='text-xs text-muted truncate mt-0.5'>
                     {card.back}
                   </p>
-                  {card.options && (
+                  {card.options && card.options.length >= 1 && (
                     <span
                       className='inline-block font-mono text-[0.58rem] font-semibold uppercase tracking-wide mt-1 px-1.5 py-0.5 rounded-full'
                       style={{
@@ -211,7 +218,7 @@ export function DeckEditor({ deck, onSave, onCancel }: DeckEditorProps) {
                         color: 'var(--color-secondary)',
                       }}
                     >
-                      MC
+                      {card.options.length === 1 ? 'ID' : 'MC'}
                     </span>
                   )}
                 </div>
@@ -321,16 +328,19 @@ export function DeckEditor({ deck, onSave, onCancel }: DeckEditorProps) {
           >
             ✓
           </span>
-          Add multiple-choice options (for quiz mode)
+          Add quiz options
         </button>
 
         {cardForm.showQuiz && (
           <div className='border-[1.5px] border-border rounded-xl p-4 mb-4'>
+            <p className='text-[0.7rem] font-mono text-muted uppercase tracking-wide mb-3'>
+              Option A is required — fill B–D for multiple choice, leave empty for identification
+            </p>
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4'>
               {cardForm.options.map((opt, i) => (
                 <div key={i}>
                   <label className={labelClass}>
-                    Option {LETTERS[i]}{' '}
+                    Option {LETTERS[i]}{i === 0 ? ' *' : ' (optional)'}{' '}
                     <input
                       type='radio'
                       name='answerIndex'
@@ -349,12 +359,7 @@ export function DeckEditor({ deck, onSave, onCancel }: DeckEditorProps) {
                     type='text'
                     value={opt}
                     onChange={(e) => {
-                      const opts = [...cardForm.options] as [
-                        string,
-                        string,
-                        string,
-                        string,
-                      ];
+                      const opts = [...cardForm.options] as [string, string, string, string];
                       opts[i] = e.target.value;
                       setCardForm((f) => ({ ...f, options: opts }));
                     }}
@@ -369,6 +374,9 @@ export function DeckEditor({ deck, onSave, onCancel }: DeckEditorProps) {
                 </div>
               ))}
             </div>
+            {errors.answer && (
+              <p className='text-[0.75rem] text-primary mb-3'>{errors.answer}</p>
+            )}
             <div>
               <label className={labelClass}>Explanation (optional)</label>
               <textarea
@@ -387,7 +395,7 @@ export function DeckEditor({ deck, onSave, onCancel }: DeckEditorProps) {
         <div className='flex gap-3'>
           <button
             onClick={saveCardForm}
-            className='px-5 py-2 rounded-xl font-bold text-sm cursor-pointer transition-opacity hover:opacity-80 bg-text-primary text-bg'
+            className='px-5 py-2 rounded-xl font-bold text-sm cursor-pointer transition-opacity hover:opacity-80 bg-cta text-cta-text'
           >
             {editingCardId ? 'Update Card' : '+ Add Card'}
           </button>
@@ -406,7 +414,7 @@ export function DeckEditor({ deck, onSave, onCancel }: DeckEditorProps) {
       <div className='flex gap-3'>
         <button
           onClick={handleSave}
-          className='px-6 py-2.5 rounded-xl font-bold text-sm cursor-pointer transition-opacity hover:opacity-80 bg-text-primary text-bg'
+          className='px-6 py-2.5 rounded-xl font-bold text-sm cursor-pointer transition-opacity hover:opacity-80 bg-cta text-cta-text'
         >
           Save Deck
         </button>
