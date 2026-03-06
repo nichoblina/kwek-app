@@ -1,5 +1,19 @@
 export type Category = string;
 export type Theme = 'default' | 'dark' | 'pink';
+export type QuestionType = "mc" | "tf" | "identification";
+
+export interface GeneratedQuestion {
+  cardId: string;
+  type: QuestionType;
+  question: string;          // card.front (or card.question for FullCard)
+  correctAnswer: string;     // card.back (or correct option for FullCard)
+  options?: string[];        // MC: 4 items, TF: ["True", "False"]
+  answerIndex?: number;      // correct option index for MC and TF
+  displayedAnswer?: string;  // TF only: the answer being evaluated
+  explanation?: string;      // shown after answering
+  isHtml?: boolean;          // true for FullCard content
+  isGenerated: boolean;      // true if auto-generated
+}
 export type ConfidenceRating = "easy" | "hard";
 export type AnswerResult = "correct" | "incorrect";
 
@@ -31,15 +45,18 @@ export interface FullCard {
   explanation: string; // HTML
 }
 
-/** Custom user-created cards: plain text, optional MC upgrade. */
+/** Custom user-created cards: plain text, optional quiz upgrade.
+ *  options.length === 1  → identification (single correct answer to type)
+ *  options.length >= 2   → multiple choice
+ */
 export interface SimpleCard {
   id: string;
   type: "simple";
   category: Category;
   front: string;       // plain text
   back: string;        // plain text
-  options?: [string, string, string, string];
-  answerIndex?: 0 | 1 | 2 | 3;
+  options?: string[];  // 1 = identification, 2–4 = multiple choice
+  answerIndex?: number;
   explanation?: string;
 }
 
@@ -53,7 +70,7 @@ export function hasQuizData(card: Card): boolean {
   if (card.type === "full") return true;
   return !!(
     card.options &&
-    card.options.length === 4 &&
+    card.options.length >= 1 &&
     card.answerIndex !== undefined
   );
 }
