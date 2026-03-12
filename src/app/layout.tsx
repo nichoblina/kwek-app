@@ -22,7 +22,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "kwek — Flashcards & Quizzes",
+  title: "kwek",
   description: "Study smarter with kwek: flashcards and multiple-choice quizzes for interview prep.",
 };
 

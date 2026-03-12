@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useEffect } from "react";
 import Link from "next/link";
 import { useDecks } from "@/hooks/useDecks";
 import { Badge, CategoryDot } from "@/components/ui/Badge";
@@ -13,6 +13,10 @@ export default function DeckDetailPage({ params }: PageProps) {
   const { id } = use(params);
   const { getDeckById, hydrated } = useDecks();
   const deck = getDeckById(id);
+
+  useEffect(() => {
+    if (deck) document.title = `${deck.name} · kwek`;
+  }, [deck?.name]);
 
   if (!hydrated) {
     return (

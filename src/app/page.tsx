@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { SettingsModal } from '@/components/SettingsModal';
 import { useDecks } from '@/hooks/useDecks';
@@ -12,6 +12,8 @@ const LEGEND_LIMIT = 5;
 export default function Home() {
   // Initialize decks
   const { allDecks, customDecks, hydrated } = useDecks();
+
+  useEffect(() => { document.title = "kwek"; }, []);
 
   // Initialize settings
   const [showSettings, setShowSettings] = useState(false);
