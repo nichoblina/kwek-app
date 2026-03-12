@@ -26,7 +26,7 @@ export default function FlashcardsPage({ params }: PageProps) {
   const [autoFlipSeconds, setAutoFlipSeconds] = useState<number | null>(null);
   const [hardOnly, setHardOnly] = useState(false);
 
-  const { progress, rateConfidence, resetProgress } = useFlashcardProgress(id);
+  const { progress, markSeen, rateConfidence, resetProgress } = useFlashcardProgress(id);
 
   function cycleAutoFlip() {
     setAutoFlipSeconds((prev) => {
@@ -62,6 +62,12 @@ export default function FlashcardsPage({ params }: PageProps) {
     }
   }, [filteredCards.length, currentIndex]);
 
+  // Mark card as seen when navigating to it
+  useEffect(() => {
+    const current = filteredCards[currentIndex];
+    if (current) markSeen(current.id);
+  }, [currentIndex, filteredCards]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!hydrated) {
     return (
       <div className="max-w-3xl mx-auto px-5 py-10">
@@ -85,7 +91,6 @@ export default function FlashcardsPage({ params }: PageProps) {
 
   const easyCount = Object.values(progress.confidence).filter((v) => v === "easy").length;
   const hardCount = Object.values(progress.confidence).filter((v) => v === "hard").length;
-  const seenCount = progress.seen.length;
 
   function handleCategoryChange(cat: Category | null) {
     setActiveCategory(cat);
@@ -165,9 +170,6 @@ export default function FlashcardsPage({ params }: PageProps) {
 
         {/* Session stats */}
         <div className="flex gap-4 mt-3 flex-wrap">
-          <span className="text-[0.8rem] font-semibold text-muted">
-            Seen: <strong className="text-text-primary">{seenCount}</strong>/{filteredCards.length}
-          </span>
           <span className="text-[0.8rem] font-semibold text-green">
             Easy: {easyCount}
           </span>
