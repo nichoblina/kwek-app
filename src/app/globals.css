@@ -67,6 +67,12 @@ code {
   animation: fadeInUp 0.25s ease;
 }
 
+/* Auto-flip countdown bar */
+@keyframes timerShrink {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
 /* ── Dark theme ────────────────────────────────────────────────────────────── */
 html.dark {
   --color-bg: #1a1814;

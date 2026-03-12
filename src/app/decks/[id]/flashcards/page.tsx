@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useMemo } from "react";
+import { use, useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useDecks } from "@/hooks/useDecks";
 import { useFlashcardProgress } from "@/hooks/useFlashcardProgress";
@@ -8,6 +8,8 @@ import { FlashCardView } from "@/components/flashcard/FlashCardView";
 import { CategoryFilter } from "@/components/ui/CategoryFilter";
 import { shuffleArray } from "@/lib/utils";
 import type { Category, ConfidenceRating } from "@/lib/types";
+
+const AUTO_FLIP_OPTIONS: (number | null)[] = [null, 3, 5, 10];
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -21,16 +23,44 @@ export default function FlashcardsPage({ params }: PageProps) {
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const [shuffled, setShuffled] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [autoFlipSeconds, setAutoFlipSeconds] = useState<number | null>(null);
+  const [hardOnly, setHardOnly] = useState(false);
 
   const { progress, rateConfidence, resetProgress } = useFlashcardProgress(id);
 
-  const filteredCards = useMemo(() => {
-    if (!deck) return [];
+  function cycleAutoFlip() {
+    setAutoFlipSeconds((prev) => {
+      const idx = AUTO_FLIP_OPTIONS.indexOf(prev);
+      return AUTO_FLIP_OPTIONS[(idx + 1) % AUTO_FLIP_OPTIONS.length];
+    });
+  }
+
+  // Count hard-rated cards in the current category filter
+  const hardCardCount = useMemo(() => {
+    if (!deck) return 0;
     const cards = activeCategory
       ? deck.cards.filter((c) => c.category === activeCategory)
       : deck.cards;
+    return cards.filter((c) => progress.confidence[c.id] === "hard").length;
+  }, [deck, activeCategory, progress.confidence]);
+
+  const filteredCards = useMemo(() => {
+    if (!deck) return [];
+    let cards = activeCategory
+      ? deck.cards.filter((c) => c.category === activeCategory)
+      : deck.cards;
+    if (hardOnly) {
+      cards = cards.filter((c) => progress.confidence[c.id] === "hard");
+    }
     return shuffled ? shuffleArray(cards) : cards;
-  }, [deck, activeCategory, shuffled]);
+  }, [deck, activeCategory, shuffled, hardOnly, progress.confidence]);
+
+  // Keep currentIndex in bounds when filteredCards shrinks (e.g. hard card rated easy)
+  useEffect(() => {
+    if (filteredCards.length > 0 && currentIndex >= filteredCards.length) {
+      setCurrentIndex(filteredCards.length - 1);
+    }
+  }, [filteredCards.length, currentIndex]);
 
   if (!hydrated) {
     return (
@@ -70,19 +100,44 @@ export default function FlashcardsPage({ params }: PageProps) {
   return (
     <div className="max-w-3xl mx-auto px-5 py-10 pb-16">
       {/* Nav */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <Link
           href={`/decks/${id}`}
-          className="font-mono text-[0.7rem] font-semibold uppercase tracking-widest text-muted hover:text-text-primary transition-colors"
+          className="font-mono text-[0.7rem] font-semibold uppercase tracking-widest text-muted hover:text-text-primary transition-colors shrink-0"
         >
           ← {deck.name}
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          {/* Auto-flip: cycles through off → 3s → 5s → 10s */}
           <button
-            onClick={() => {
-              setShuffled((s) => !s);
-              setCurrentIndex(0);
+            onClick={cycleAutoFlip}
+            className="font-mono text-[0.65rem] font-semibold uppercase tracking-wide px-3 py-1.5 rounded-full border-[1.5px] transition-all cursor-pointer"
+            style={{
+              borderColor: autoFlipSeconds ? "var(--color-secondary)" : "var(--color-border)",
+              background: autoFlipSeconds ? "var(--color-secondary)" : "transparent",
+              color: autoFlipSeconds ? "white" : "var(--color-muted)",
             }}
+          >
+            {autoFlipSeconds ? `⏱ ${autoFlipSeconds}s` : "⏱ Auto"}
+          </button>
+
+          {/* Hard Only — visible when hard cards exist or already active */}
+          {(hardCardCount > 0 || hardOnly) && (
+            <button
+              onClick={() => { setHardOnly((h) => !h); setCurrentIndex(0); }}
+              className="font-mono text-[0.65rem] font-semibold uppercase tracking-wide px-3 py-1.5 rounded-full border-[1.5px] transition-all cursor-pointer"
+              style={{
+                borderColor: hardOnly ? "var(--color-primary)" : "var(--color-border)",
+                background: hardOnly ? "rgba(232,114,26,0.1)" : "transparent",
+                color: hardOnly ? "var(--color-primary)" : "var(--color-muted)",
+              }}
+            >
+              {hardOnly ? `★ Hard (${filteredCards.length})` : `Hard (${hardCardCount})`}
+            </button>
+          )}
+
+          <button
+            onClick={() => { setShuffled((s) => !s); setCurrentIndex(0); }}
             className="font-mono text-[0.65rem] font-semibold uppercase tracking-wide px-3 py-1.5 rounded-full border-[1.5px] transition-all cursor-pointer"
             style={{
               borderColor: shuffled ? "var(--color-text-primary)" : "var(--color-border)",
@@ -93,7 +148,7 @@ export default function FlashcardsPage({ params }: PageProps) {
             {shuffled ? "✓ Shuffled" : "Shuffle"}
           </button>
           <button
-            onClick={() => { resetProgress(); setCurrentIndex(0); }}
+            onClick={() => { resetProgress(); setCurrentIndex(0); setHardOnly(false); }}
             className="font-mono text-[0.65rem] font-semibold uppercase tracking-wide px-3 py-1.5 rounded-full border-[1.5px] border-border text-muted hover:border-text-primary hover:text-text-primary transition-all cursor-pointer"
           >
             Reset
@@ -131,7 +186,16 @@ export default function FlashcardsPage({ params }: PageProps) {
 
       {/* Card */}
       {filteredCards.length === 0 ? (
-        <div className="text-center py-16 text-muted text-sm">No cards in this category.</div>
+        <div className="text-center py-16 text-muted text-sm">
+          {hardOnly ? (
+            <>
+              <p className="font-semibold text-text-primary mb-1">No hard cards yet</p>
+              <p>Rate some cards as Hard while studying, then come back here.</p>
+            </>
+          ) : (
+            "No cards in this category."
+          )}
+        </div>
       ) : (
         <FlashCardView
           card={card}
@@ -147,6 +211,7 @@ export default function FlashcardsPage({ params }: PageProps) {
           }}
           onConfidence={handleConfidence}
           existingConfidence={progress.confidence[card.id]}
+          autoFlipSeconds={autoFlipSeconds}
         />
       )}
 
