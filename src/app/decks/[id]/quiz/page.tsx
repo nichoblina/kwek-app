@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useMemo } from "react";
+import { use, useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useDecks } from "@/hooks/useDecks";
 import { QuizCardView } from "@/components/quiz/QuizCardView";
@@ -22,6 +22,10 @@ export default function QuizPage({ params }: PageProps) {
   const { id } = use(params);
   const { getDeckById, hydrated } = useDecks();
   const deck = getDeckById(id);
+
+  useEffect(() => {
+    if (deck) document.title = `${deck.name} — Quiz · kwek`;
+  }, [deck?.name]);
 
   const [selectedTypes, setSelectedTypes] = useState<QuestionType[] | null>(null);
   const [randomize, setRandomize] = useState(false);

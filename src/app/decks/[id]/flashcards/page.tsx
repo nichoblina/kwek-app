@@ -62,6 +62,10 @@ export default function FlashcardsPage({ params }: PageProps) {
     }
   }, [filteredCards.length, currentIndex]);
 
+  useEffect(() => {
+    if (deck) document.title = `${deck.name} — Flashcards · kwek`;
+  }, [deck?.name]);
+
   // Mark card as seen when navigating to it
   useEffect(() => {
     const current = filteredCards[currentIndex];
