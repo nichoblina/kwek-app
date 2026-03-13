@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { GeneratedQuestion } from "@/lib/types";
 import type { AnswerRecord } from "@/app/decks/[id]/quiz/page";
+import { Check, X } from "lucide-react";
 
 const LETTERS = ["A", "B", "C", "D"] as const;
 
@@ -209,8 +210,9 @@ export function QuizCardView({
             color: isCorrect ? "var(--color-green)" : "var(--color-primary)",
           }}
         >
-          <div className="font-mono font-bold text-[0.7rem] uppercase tracking-wider mb-1.5">
-            {isCorrect ? "✓ Correct" : "✗ Incorrect"}
+          <div className="flex items-center gap-1.5 font-mono font-bold text-[0.7rem] uppercase tracking-wider mb-1.5">
+            {isCorrect ? <Check size={12} strokeWidth={3} /> : <X size={12} strokeWidth={3} />}
+            {isCorrect ? "Correct" : "Incorrect"}
           </div>
           {!isCorrect && (
             <div className="text-[0.8rem] mb-1 font-semibold opacity-80">

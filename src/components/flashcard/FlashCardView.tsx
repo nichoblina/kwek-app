@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { Card, ConfidenceRating } from "@/lib/types";
 import { isFullCard } from "@/lib/types";
 import { Badge } from "@/components/ui/Badge";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface FlashCardViewProps {
   card: Card;
@@ -194,7 +195,7 @@ export function FlashCardView({
           disabled={cardIndex === 0}
           className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm text-text-primary transition-all duration-150 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface"
         >
-          ← Prev
+          <ChevronLeft size={16} strokeWidth={2.5} /> Prev
         </button>
 
         {/* Dot indicators — driven by index comparison, must stay inline */}
@@ -223,7 +224,7 @@ export function FlashCardView({
           disabled={cardIndex === total - 1}
           className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm text-text-primary transition-all duration-150 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface"
         >
-          Next →
+          Next <ChevronRight size={16} strokeWidth={2.5} />
         </button>
       </div>
     </div>
