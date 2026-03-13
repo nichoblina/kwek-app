@@ -1,17 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { SettingsModal } from '@/components/SettingsModal';
 import { useDecks } from '@/hooks/useDecks';
 import { DeckGrid } from '@/components/deck/DeckGrid';
 import { getCategoryColor, getCategoryLabel } from '@/lib/utils';
+import { Settings2 } from 'lucide-react';
 
 const LEGEND_LIMIT = 5;
 
 export default function Home() {
   // Initialize decks
   const { allDecks, customDecks, hydrated } = useDecks();
+
+  useEffect(() => { document.title = "kwek"; }, []);
 
   // Initialize settings
   const [showSettings, setShowSettings] = useState(false);
@@ -77,13 +80,14 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowSettings(true)}
-              className='px-5 py-2.5 rounded-xl font-bold text-sm border-[1.5px] border-border hover:border-primary hover:bg-primary hover:text-white transition-all'
+              className='flex items-center gap-1.5 px-5 py-2.5 rounded-xl font-bold text-sm border-[1.5px] border-border hover:border-primary hover:bg-primary hover:text-white transition-all'
             >
-              ⚙ Settings
+              <Settings2 size={15} strokeWidth={2.5} />
+              Settings
             </button>
             <Link
               href='/decks/new'
-              className='px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-150 shrink-0 bg-primary text-white hover:opacity-80 border-[1.5px] border-transparent'
+              className='px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-150 shrink-0 bg-cta text-cta-text hover:opacity-80 border-[1.5px] border-transparent'
             >
               + New Deck
             </Link>
@@ -196,7 +200,7 @@ export default function Home() {
               </p>
               <Link
                 href='/decks/new'
-                className='inline-block px-5 py-2 rounded-xl font-bold text-sm transition-all duration-150 hover:opacity-80 bg-text-primary text-bg'
+                className='inline-block px-5 py-2 rounded-xl font-bold text-sm transition-all duration-150 hover:opacity-80 bg-cta text-cta-text'
               >
                 + Create Deck
               </Link>

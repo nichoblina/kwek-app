@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { Card, ConfidenceRating } from "@/lib/types";
 import { isFullCard } from "@/lib/types";
 import { Badge } from "@/components/ui/Badge";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface FlashCardViewProps {
   card: Card;
@@ -13,6 +14,7 @@ interface FlashCardViewProps {
   onPrev: () => void;
   onConfidence: (rating: ConfidenceRating) => void;
   existingConfidence?: ConfidenceRating;
+  autoFlipSeconds?: number | null;
 }
 
 export function FlashCardView({
@@ -23,12 +25,20 @@ export function FlashCardView({
   onPrev,
   onConfidence,
   existingConfidence,
+  autoFlipSeconds,
 }: FlashCardViewProps) {
   const [flipped, setFlipped] = useState(false);
 
   useEffect(() => {
     setFlipped(false);
   }, [card.id]);
+
+  // Auto-flip: start a timer when a new (unflipped) card appears
+  useEffect(() => {
+    if (!autoFlipSeconds || flipped) return;
+    const timer = setTimeout(() => setFlipped(true), autoFlipSeconds * 1000);
+    return () => clearTimeout(timer);
+  }, [card.id, flipped, autoFlipSeconds]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -85,7 +95,7 @@ export function FlashCardView({
         >
           {/* Front face */}
           <div
-            className="flip-card-face absolute inset-0 rounded-2xl border-[1.5px] border-border bg-card p-7 flex flex-col justify-center"
+            className="flip-card-face absolute inset-0 rounded-2xl border-[1.5px] border-border bg-card p-7 flex flex-col justify-center overflow-hidden"
             style={{ backfaceVisibility: "hidden" }}
           >
             <div className="text-[0.65rem] font-mono font-semibold uppercase tracking-widest text-muted mb-4">
@@ -97,13 +107,25 @@ export function FlashCardView({
                 dangerouslySetInnerHTML={{ __html: frontContent }}
               />
             ) : (
-              <div className="text-base font-semibold leading-relaxed text-text-primary">
+              <div className="text-base font-semibold leading-relaxed text-text-primary whitespace-pre-wrap">
                 {frontContent}
               </div>
             )}
             <div className="mt-6 text-[0.72rem] text-muted font-medium">
-              Click or press <kbd className="font-mono bg-surface px-1.5 py-0.5 rounded text-xs">Space</kbd> to flip
+              {autoFlipSeconds
+                ? <span className="text-secondary font-semibold">Auto-flipping…</span>
+                : <>Click or press <kbd className="font-mono bg-surface px-1.5 py-0.5 rounded text-xs">Space</kbd> to flip</>
+              }
             </div>
+
+            {/* Auto-flip countdown bar */}
+            {autoFlipSeconds && !flipped && (
+              <div
+                key={`timer-${card.id}-${autoFlipSeconds}`}
+                className="absolute bottom-0 left-0 h-[3px] bg-secondary"
+                style={{ animation: `timerShrink ${autoFlipSeconds}s linear forwards` }}
+              />
+            )}
           </div>
 
           {/* Back face */}
@@ -123,7 +145,7 @@ export function FlashCardView({
                 dangerouslySetInnerHTML={{ __html: backContent }}
               />
             ) : (
-              <div className="text-sm font-medium leading-relaxed text-text-primary">
+              <div className="text-sm font-medium leading-relaxed text-text-primary whitespace-pre-wrap">
                 {backContent}
               </div>
             )}
@@ -173,7 +195,7 @@ export function FlashCardView({
           disabled={cardIndex === 0}
           className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm text-text-primary transition-all duration-150 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface"
         >
-          ← Prev
+          <ChevronLeft size={16} strokeWidth={2.5} /> Prev
         </button>
 
         {/* Dot indicators — driven by index comparison, must stay inline */}
@@ -202,7 +224,7 @@ export function FlashCardView({
           disabled={cardIndex === total - 1}
           className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm text-text-primary transition-all duration-150 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface"
         >
-          Next →
+          Next <ChevronRight size={16} strokeWidth={2.5} />
         </button>
       </div>
     </div>

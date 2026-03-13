@@ -2,6 +2,7 @@
 
 import { getScoreTier } from "@/lib/utils";
 import Link from "next/link";
+import { RotateCcw, ChevronLeft } from "lucide-react";
 
 interface ScoreSummaryProps {
   score: number;
@@ -49,16 +50,18 @@ export function ScoreSummary({
       <div className="flex gap-3 mt-6 flex-wrap">
         <button
           onClick={onRestart}
-          className="px-5 py-2 rounded-lg font-bold text-sm cursor-pointer transition-opacity hover:opacity-80 bg-bg text-text-primary"
+          className="flex items-center gap-2 px-5 py-2 rounded-lg font-bold text-sm cursor-pointer transition-opacity hover:opacity-80 bg-bg text-text-primary"
         >
-          ↺ Retake Quiz
+          <RotateCcw size={14} strokeWidth={2.5} />
+          Retake Quiz
         </button>
         <Link
           href={`/decks/${deckId}`}
-          className="px-5 py-2 rounded-lg font-bold text-sm transition-opacity hover:opacity-80 text-bg"
+          className="flex items-center gap-1.5 px-5 py-2 rounded-lg font-bold text-sm transition-opacity hover:opacity-80 text-bg"
           style={{ background: "rgba(255,255,255,0.12)" }}
         >
-          ← Back to {deckName}
+          <ChevronLeft size={14} strokeWidth={2.5} />
+          Back to {deckName}
         </Link>
       </div>
     </div>

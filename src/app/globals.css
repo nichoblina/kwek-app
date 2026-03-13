@@ -17,6 +17,9 @@
   --color-green: #2a9d5c;
   --color-yellow: #e8a020;
   --color-surface: #f0ece5;
+  /* CTA button colour — dark in light/pink themes, primary in dark theme */
+  --color-cta: var(--color-text-primary);
+  --color-cta-text: var(--color-bg);
 }
 
 body {
@@ -64,6 +67,12 @@ code {
   animation: fadeInUp 0.25s ease;
 }
 
+/* Auto-flip countdown bar */
+@keyframes timerShrink {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
 /* ── Dark theme ────────────────────────────────────────────────────────────── */
 html.dark {
   --color-bg: #1a1814;
@@ -72,6 +81,8 @@ html.dark {
   --color-text-primary: #f7f4ef;
   --color-muted: #6b6560;
   --color-surface: #2a2520;
+  --color-cta: var(--color-primary);
+  --color-cta-text: #ffffff;
 }
 
 /* ── Pink theme ────────────────────────────────────────────────────────────── */
