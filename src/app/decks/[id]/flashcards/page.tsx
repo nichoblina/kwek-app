@@ -8,6 +8,7 @@ import { FlashCardView } from "@/components/flashcard/FlashCardView";
 import { CategoryFilter } from "@/components/ui/CategoryFilter";
 import { shuffleArray } from "@/lib/utils";
 import type { Category, ConfidenceRating } from "@/lib/types";
+import { Timer, Star, Shuffle, Check } from "lucide-react";
 
 const AUTO_FLIP_OPTIONS: (number | null)[] = [null, 3, 5, 10];
 
@@ -120,41 +121,44 @@ export default function FlashcardsPage({ params }: PageProps) {
           {/* Auto-flip: cycles through off → 3s → 5s → 10s */}
           <button
             onClick={cycleAutoFlip}
-            className="font-mono text-[0.65rem] font-semibold uppercase tracking-wide px-3 py-1.5 rounded-full border-[1.5px] transition-all cursor-pointer"
+            className="flex items-center gap-1.5 font-mono text-[0.65rem] font-semibold uppercase tracking-wide px-3 py-1.5 rounded-full border-[1.5px] transition-all cursor-pointer"
             style={{
               borderColor: autoFlipSeconds ? "var(--color-secondary)" : "var(--color-border)",
               background: autoFlipSeconds ? "var(--color-secondary)" : "transparent",
               color: autoFlipSeconds ? "white" : "var(--color-muted)",
             }}
           >
-            {autoFlipSeconds ? `⏱ ${autoFlipSeconds}s` : "⏱ Auto"}
+            <Timer size={12} strokeWidth={2.5} />
+            {autoFlipSeconds ? `${autoFlipSeconds}s` : "Auto"}
           </button>
 
           {/* Hard Only — visible when hard cards exist or already active */}
           {(hardCardCount > 0 || hardOnly) && (
             <button
               onClick={() => { setHardOnly((h) => !h); setCurrentIndex(0); }}
-              className="font-mono text-[0.65rem] font-semibold uppercase tracking-wide px-3 py-1.5 rounded-full border-[1.5px] transition-all cursor-pointer"
+              className="flex items-center gap-1.5 font-mono text-[0.65rem] font-semibold uppercase tracking-wide px-3 py-1.5 rounded-full border-[1.5px] transition-all cursor-pointer"
               style={{
                 borderColor: hardOnly ? "var(--color-primary)" : "var(--color-border)",
                 background: hardOnly ? "rgba(232,114,26,0.1)" : "transparent",
                 color: hardOnly ? "var(--color-primary)" : "var(--color-muted)",
               }}
             >
-              {hardOnly ? `★ Hard (${filteredCards.length})` : `Hard (${hardCardCount})`}
+              <Star size={12} strokeWidth={2.5} style={{ fill: hardOnly ? "currentColor" : "none" }} />
+              {hardOnly ? `Hard (${filteredCards.length})` : `Hard (${hardCardCount})`}
             </button>
           )}
 
           <button
             onClick={() => { setShuffled((s) => !s); setCurrentIndex(0); }}
-            className="font-mono text-[0.65rem] font-semibold uppercase tracking-wide px-3 py-1.5 rounded-full border-[1.5px] transition-all cursor-pointer"
+            className="flex items-center gap-1.5 font-mono text-[0.65rem] font-semibold uppercase tracking-wide px-3 py-1.5 rounded-full border-[1.5px] transition-all cursor-pointer"
             style={{
               borderColor: shuffled ? "var(--color-text-primary)" : "var(--color-border)",
               background: shuffled ? "var(--color-text-primary)" : "transparent",
               color: shuffled ? "var(--color-bg)" : "var(--color-muted)",
             }}
           >
-            {shuffled ? "✓ Shuffled" : "Shuffle"}
+            {shuffled ? <Check size={12} strokeWidth={3} /> : <Shuffle size={12} strokeWidth={2.5} />}
+            {shuffled ? "Shuffled" : "Shuffle"}
           </button>
           <button
             onClick={() => { resetProgress(); setCurrentIndex(0); setHardOnly(false); }}

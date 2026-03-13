@@ -6,6 +6,7 @@ import { SettingsModal } from '@/components/SettingsModal';
 import { useDecks } from '@/hooks/useDecks';
 import { DeckGrid } from '@/components/deck/DeckGrid';
 import { getCategoryColor, getCategoryLabel } from '@/lib/utils';
+import { Settings2 } from 'lucide-react';
 
 const LEGEND_LIMIT = 5;
 
@@ -79,9 +80,10 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowSettings(true)}
-              className='px-5 py-2.5 rounded-xl font-bold text-sm border-[1.5px] border-border hover:border-primary hover:bg-primary hover:text-white transition-all'
+              className='flex items-center gap-1.5 px-5 py-2.5 rounded-xl font-bold text-sm border-[1.5px] border-border hover:border-primary hover:bg-primary hover:text-white transition-all'
             >
-              ⚙ Settings
+              <Settings2 size={15} strokeWidth={2.5} />
+              Settings
             </button>
             <Link
               href='/decks/new'
