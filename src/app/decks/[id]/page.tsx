@@ -4,6 +4,8 @@ import { use, useEffect } from "react";
 import Link from "next/link";
 import { useDecks } from "@/hooks/useDecks";
 import { Badge, CategoryDot } from "@/components/ui/Badge";
+import { exportDeck } from "@/lib/importExport";
+import { ArrowDownCircle, Layers, PenLine, ArrowRight } from "lucide-react";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -77,14 +79,23 @@ export default function DeckDetailPage({ params }: PageProps) {
               </p>
             )}
           </div>
-          {!deck.isBuiltIn && (
-            <Link
-              href={`/decks/${deck.id}/edit`}
-              className="px-4 py-2 rounded-xl font-bold text-sm border-[1.5px] border-border hover:bg-surface transition-colors shrink-0"
+          <div className="flex items-center gap-2 shrink-0">
+            {!deck.isBuiltIn && (
+              <Link
+                href={`/decks/${deck.id}/edit`}
+                className="px-4 py-2 rounded-xl font-bold text-sm border-[1.5px] border-border hover:bg-surface transition-colors"
+              >
+                Edit Deck
+              </Link>
+            )}
+            <button
+              onClick={() => exportDeck(deck)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm border-[1.5px] border-border hover:bg-surface transition-colors cursor-pointer"
             >
-              Edit Deck
-            </Link>
-          )}
+              <ArrowDownCircle size={16} strokeWidth={2.5} />
+              Export
+            </button>
+          </div>
         </div>
 
         {/* Stats row */}
@@ -117,15 +128,15 @@ export default function DeckDetailPage({ params }: PageProps) {
           href={`/decks/${deck.id}/flashcards`}
           className="bg-card border-[1.5px] border-border rounded-2xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group"
         >
-          <div className="text-2xl mb-3">🃏</div>
+          <Layers size={28} strokeWidth={1.75} className="mb-3 text-muted group-hover:text-primary transition-colors" />
           <h2 className="font-bold text-lg text-text-primary group-hover:text-primary transition-colors">
             Flashcard Mode
           </h2>
           <p className="text-sm text-muted mt-1 leading-relaxed">
             Flip through cards at your own pace. Rate each card as Easy or Hard.
           </p>
-          <div className="mt-4 font-mono text-[0.68rem] font-semibold text-muted uppercase tracking-wider">
-            {deck.cards.length} cards →
+          <div className="flex items-center gap-1 mt-4 font-mono text-[0.68rem] font-semibold text-muted uppercase tracking-wider">
+            {deck.cards.length} cards <ArrowRight size={12} strokeWidth={2.5} />
           </div>
         </Link>
 
@@ -135,20 +146,20 @@ export default function DeckDetailPage({ params }: PageProps) {
             href={`/decks/${deck.id}/quiz`}
             className="bg-card border-[1.5px] border-border rounded-2xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group"
           >
-            <div className="text-2xl mb-3">✏️</div>
+            <PenLine size={28} strokeWidth={1.75} className="mb-3 text-muted group-hover:text-primary transition-colors" />
             <h2 className="font-bold text-lg text-text-primary group-hover:text-primary transition-colors">
               Quiz Mode
             </h2>
             <p className="text-sm text-muted mt-1 leading-relaxed">
               Multiple-choice, true/false, and identification questions with instant feedback.
             </p>
-            <div className="mt-4 font-mono text-[0.68rem] font-semibold text-muted uppercase tracking-wider">
-              {deck.cards.length} questions →
+            <div className="flex items-center gap-1 mt-4 font-mono text-[0.68rem] font-semibold text-muted uppercase tracking-wider">
+              {deck.cards.length} questions <ArrowRight size={12} strokeWidth={2.5} />
             </div>
           </Link>
         ) : (
           <div className="bg-surface border-[1.5px] border-dashed border-border rounded-2xl p-6 opacity-60">
-            <div className="text-2xl mb-3">✏️</div>
+            <PenLine size={28} strokeWidth={1.75} className="mb-3 text-muted" />
             <h2 className="font-bold text-lg text-text-primary">Quiz Mode</h2>
             <p className="text-sm text-muted mt-1 leading-relaxed">
               Add at least one card to enable quiz mode.
