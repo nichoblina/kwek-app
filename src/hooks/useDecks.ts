@@ -109,6 +109,25 @@ export function useDecks() {
     []
   );
 
+  const duplicateDeck = useCallback(
+    (deckId: string): Deck | null => {
+      const original = getDeckById(deckId);
+      if (!original) return null;
+      const deck: Deck = {
+        ...original,
+        id: generateId(),
+        name: `${original.name} (copy)`,
+        createdAt: new Date().toISOString(),
+        isBuiltIn: false,
+        cards: original.cards.map((c) => ({ ...c, id: generateId() })),
+      };
+      upsertCustomDeck(deck);
+      setCustomDecks(getCustomDecks());
+      return deck;
+    },
+    [getDeckById]
+  );
+
   return {
     allDecks,
     customDecks,
@@ -117,6 +136,7 @@ export function useDecks() {
     createDeck,
     updateDeck,
     deleteDeck,
+    duplicateDeck,
     addCardToDeck,
     updateCardInDeck,
     deleteCardFromDeck,

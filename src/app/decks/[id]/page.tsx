@@ -1,11 +1,13 @@
 "use client";
 
-import { use, useEffect } from "react";
+import { use, useEffect, useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useDecks } from "@/hooks/useDecks";
 import { Badge, CategoryDot } from "@/components/ui/Badge";
 import { exportDeck } from "@/lib/importExport";
-import { ArrowDownCircle, Layers, PenLine, ArrowRight } from "lucide-react";
+import { isFullCard } from "@/lib/types";
+import { ArrowDownCircle, Layers, PenLine, ArrowRight, Copy, Search, X } from "lucide-react";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -13,12 +15,36 @@ interface PageProps {
 
 export default function DeckDetailPage({ params }: PageProps) {
   const { id } = use(params);
-  const { getDeckById, hydrated } = useDecks();
+  const router = useRouter();
+  const { getDeckById, hydrated, duplicateDeck } = useDecks();
   const deck = getDeckById(id);
+
+  const [search, setSearch] = useState("");
+  const [duplicating, setDuplicating] = useState(false);
 
   useEffect(() => {
     if (deck) document.title = `${deck.name} · kwek`;
   }, [deck?.name]);
+
+  const filteredCards = useMemo(() => {
+    if (!deck) return [];
+    const q = search.trim().toLowerCase();
+    if (!q) return deck.cards;
+    const strip = (html: string) => html.replace(/<[^>]*>/g, "");
+    return deck.cards.filter((c) => {
+      const front = isFullCard(c) ? strip(c.front) : c.front;
+      const back = isFullCard(c) ? strip(c.explanation) : c.back;
+      return front.toLowerCase().includes(q) || back.toLowerCase().includes(q);
+    });
+  }, [deck, search]);
+
+  function handleDuplicate() {
+    if (!deck) return;
+    setDuplicating(true);
+    const copy = duplicateDeck(deck.id);
+    if (copy) router.push(`/decks/${copy.id}`);
+    else setDuplicating(false);
+  }
 
   if (!hydrated) {
     return (
@@ -79,7 +105,7 @@ export default function DeckDetailPage({ params }: PageProps) {
               </p>
             )}
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
             {!deck.isBuiltIn && (
               <Link
                 href={`/decks/${deck.id}/edit`}
@@ -88,6 +114,14 @@ export default function DeckDetailPage({ params }: PageProps) {
                 Edit Deck
               </Link>
             )}
+            <button
+              onClick={handleDuplicate}
+              disabled={duplicating}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm border-[1.5px] border-border hover:bg-surface transition-colors cursor-pointer disabled:opacity-50"
+            >
+              <Copy size={16} strokeWidth={2.5} />
+              {duplicating ? "Duplicating…" : "Duplicate"}
+            </button>
             <button
               onClick={() => exportDeck(deck)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm border-[1.5px] border-border hover:bg-surface transition-colors cursor-pointer"
@@ -122,7 +156,7 @@ export default function DeckDetailPage({ params }: PageProps) {
       </div>
 
       {/* Mode CTAs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
         {/* Flashcard mode */}
         <Link
           href={`/decks/${deck.id}/flashcards`}
@@ -176,6 +210,81 @@ export default function DeckDetailPage({ params }: PageProps) {
           </div>
         )}
       </div>
+
+      {/* Card search */}
+      {deck.cards.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-4 gap-3">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-muted font-mono">
+              Cards
+            </h2>
+            <div className="relative flex-1 max-w-xs">
+              <Search
+                size={14}
+                strokeWidth={2.5}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none"
+              />
+              <input
+                type="text"
+                placeholder="Search cards…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-8 pr-8 py-2 rounded-xl border-[1.5px] border-border bg-card text-sm font-medium text-text-primary placeholder:text-muted focus:outline-none focus:border-primary transition-colors"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-text-primary transition-colors cursor-pointer"
+                >
+                  <X size={14} strokeWidth={2.5} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {filteredCards.length === 0 ? (
+            <p className="text-sm text-muted text-center py-8">No cards match &ldquo;{search}&rdquo;</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {search && (
+                <p className="text-[0.75rem] text-muted font-medium mb-1">
+                  {filteredCards.length} of {deck.cards.length} cards
+                </p>
+              )}
+              {filteredCards.map((card) => {
+                const back = isFullCard(card) ? card.explanation : card.back;
+                return (
+                  <div
+                    key={card.id}
+                    className="bg-card border-[1.5px] border-border rounded-xl px-4 py-3 flex gap-4 items-start"
+                  >
+                    <div className="flex-1 min-w-0">
+                      {isFullCard(card) ? (
+                        <p
+                          className="text-sm font-semibold text-text-primary leading-snug line-clamp-2"
+                          dangerouslySetInnerHTML={{ __html: card.front }}
+                        />
+                      ) : (
+                        <p className="text-sm font-semibold text-text-primary leading-snug line-clamp-2">
+                          {card.front}
+                        </p>
+                      )}
+                      {back && (
+                        <p className="text-xs text-muted mt-1 leading-relaxed line-clamp-2">
+                          {isFullCard(card)
+                            ? back.replace(/<[^>]*>/g, "")
+                            : back}
+                        </p>
+                      )}
+                    </div>
+                    <Badge category={card.category} size="sm" />
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }

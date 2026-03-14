@@ -138,3 +138,19 @@ export function clearFlashcardProgress(deckId: string): void {
   delete storage.flashcardProgress[deckId];
   saveStorage(storage);
 }
+
+// ─── Last Studied ─────────────────────────────────────────────────────────────
+
+export function getLastStudied(deckId: string): string | null {
+  const storage = loadStorage();
+  const quiz = storage.quizProgress[deckId];
+  const flash = storage.flashcardProgress[deckId];
+
+  const quizTs = quiz ? (quiz.completedAt ?? quiz.startedAt) : null;
+  const flashTs = flash ? flash.lastStudiedAt : null;
+
+  if (!quizTs && !flashTs) return null;
+  if (!quizTs) return flashTs;
+  if (!flashTs) return quizTs;
+  return new Date(quizTs) > new Date(flashTs) ? quizTs : flashTs;
+}

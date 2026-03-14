@@ -6,7 +6,7 @@ import { SettingsModal } from '@/components/SettingsModal';
 import { useDecks } from '@/hooks/useDecks';
 import { DeckGrid } from '@/components/deck/DeckGrid';
 import { getCategoryColor, getCategoryLabel } from '@/lib/utils';
-import { Settings2 } from 'lucide-react';
+import { Settings2, Plus } from 'lucide-react';
 import { useStarredDecks } from '@/hooks/useStarredDecks';
 
 const LEGEND_LIMIT = 5;
@@ -89,9 +89,10 @@ export default function Home() {
             </button>
             <Link
               href='/decks/new'
-              className='px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-150 shrink-0 bg-cta text-cta-text hover:opacity-80 border-[1.5px] border-transparent'
+              className='flex items-center gap-1.5 px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-150 shrink-0 bg-cta text-cta-text hover:opacity-80 border-[1.5px] border-transparent'
             >
-              + New Deck
+              <Plus size={15} strokeWidth={2.5} />
+              New Deck
             </Link>
           </div>
         </div>
@@ -224,9 +225,10 @@ export default function Home() {
               </p>
               <Link
                 href='/decks/new'
-                className='inline-block px-5 py-2 rounded-xl font-bold text-sm transition-all duration-150 hover:opacity-80 bg-cta text-cta-text'
+                className='inline-flex items-center gap-1.5 px-5 py-2 rounded-xl font-bold text-sm transition-all duration-150 hover:opacity-80 bg-cta text-cta-text'
               >
-                + Create Deck
+                <Plus size={15} strokeWidth={2.5} />
+                Create Deck
               </Link>
             </div>
           )}
