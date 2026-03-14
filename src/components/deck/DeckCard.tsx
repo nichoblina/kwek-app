@@ -1,10 +1,12 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import type { Deck } from "@/lib/types";
-import { getCategoryColor, getCategoryLabel } from "@/lib/utils";
+import { getCategoryColor, getCategoryLabel, timeAgo } from "@/lib/utils";
+import { getLastStudied } from "@/lib/storage";
 import { useStarredDecks } from "@/hooks/useStarredDecks";
-import { Star } from "lucide-react";
+import { Star, Clock } from "lucide-react";
 
 interface DeckCardProps {
   deck: Deck;
@@ -13,6 +15,11 @@ interface DeckCardProps {
 export function DeckCard({ deck }: DeckCardProps) {
   const { isStarred, toggleStar } = useStarredDecks();
   const starred = isStarred(deck.id);
+  const [lastStudied, setLastStudied] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLastStudied(getLastStudied(deck.id));
+  }, [deck.id]);
 
   const quizCount = deck.cards.filter((c) =>
     c.type === "full" || (c.options && c.options.length === 4 && c.answerIndex !== undefined)
@@ -72,6 +79,16 @@ export function DeckCard({ deck }: DeckCardProps) {
             </div>
           ))}
         </div>
+
+        {/* Last studied */}
+        {lastStudied && (
+          <div className="flex items-center justify-end gap-1 mt-2">
+            <Clock size={10} strokeWidth={2} className="text-muted" />
+            <p className="text-[0.68rem] text-muted font-medium">
+              {timeAgo(lastStudied)}
+            </p>
+          </div>
+        )}
       </Link>
 
       {/* Star button — outside the Link to avoid nesting issues */}
