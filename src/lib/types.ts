@@ -115,4 +115,5 @@ export interface KwekStorage {
   customDecks: Deck[];
   quizProgress: Record<string, QuizProgress>;
   flashcardProgress: Record<string, FlashcardProgress>;
+  starredDeckIds: string[];
 }
