@@ -13,6 +13,7 @@ const defaultStorage: KwekStorage = {
   customDecks: [],
   quizProgress: {},
   flashcardProgress: {},
+  starredDeckIds: [],
 };
 
 function isClient(): boolean {
@@ -29,6 +30,8 @@ export function loadStorage(): KwekStorage {
     if (parsed.schemaVersion !== SCHEMA_VERSION) {
       return { ...defaultStorage };
     }
+    // Backfill fields added after initial schema
+    if (!parsed.starredDeckIds) parsed.starredDeckIds = [];
     return parsed;
   } catch {
     return { ...defaultStorage };
@@ -68,6 +71,36 @@ export function deleteCustomDeck(deckId: string): void {
   delete storage.quizProgress[deckId];
   delete storage.flashcardProgress[deckId];
   saveStorage(storage);
+}
+
+// ─── Starred Decks ────────────────────────────────────────────────────────────
+
+export function getStarredDeckIds(): string[] {
+  return loadStorage().starredDeckIds;
+}
+
+export const MAX_STARRED_DECKS = 3;
+
+export function toggleStarredDeck(deckId: string): { ok: boolean; reason?: string } {
+  const storage = loadStorage();
+  const idx = storage.starredDeckIds.indexOf(deckId);
+  if (idx === -1) {
+    if (storage.starredDeckIds.length >= MAX_STARRED_DECKS) {
+      const reason = `You can only pin up to ${MAX_STARRED_DECKS} decks`;
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("kwek:starred-error", { detail: { reason } }));
+      }
+      return { ok: false, reason };
+    }
+    storage.starredDeckIds.push(deckId);
+  } else {
+    storage.starredDeckIds.splice(idx, 1);
+  }
+  saveStorage(storage);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("kwek:starred-changed"));
+  }
+  return { ok: true };
 }
 
 // ─── Quiz Progress ────────────────────────────────────────────────────────────

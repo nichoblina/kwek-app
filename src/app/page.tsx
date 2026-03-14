@@ -7,12 +7,14 @@ import { useDecks } from '@/hooks/useDecks';
 import { DeckGrid } from '@/components/deck/DeckGrid';
 import { getCategoryColor, getCategoryLabel } from '@/lib/utils';
 import { Settings2 } from 'lucide-react';
+import { useStarredDecks } from '@/hooks/useStarredDecks';
 
 const LEGEND_LIMIT = 5;
 
 export default function Home() {
   // Initialize decks
   const { allDecks, customDecks, hydrated } = useDecks();
+  const { starredIds, starError } = useStarredDecks();
 
   useEffect(() => { document.title = "kwek"; }, []);
 
@@ -186,11 +188,33 @@ export default function Home() {
         <div className='text-muted text-sm font-medium'>Loading decks…</div>
       ) : (
         <>
+          {/* Pinned decks */}
+          {starredIds.length > 0 && (
+            <section className='mb-8'>
+              <h2 className='font-mono text-[0.7rem] font-semibold uppercase tracking-widest text-muted mb-4'>
+                Pinned ({starredIds.length}/3)
+              </h2>
+              <DeckGrid
+                decks={allDecks.filter((d) => starredIds.includes(d.id))}
+                showEmptyState={false}
+              />
+              {starError && (
+                <p className='mt-3 text-sm font-medium text-primary fade-in-up'>✗ {starError}</p>
+              )}
+            </section>
+          )}
+
           <section className='mb-8'>
             <h2 className='font-mono text-[0.7rem] font-semibold uppercase tracking-widest text-muted mb-4'>
-              All Decks ({filteredDecks.length})
+              All Decks ({filteredDecks.filter((d) => !starredIds.includes(d.id)).length})
             </h2>
-            <DeckGrid decks={filteredDecks} showEmptyState={false} />
+            <DeckGrid
+              decks={filteredDecks.filter((d) => !starredIds.includes(d.id))}
+              showEmptyState={false}
+            />
+            {starError && starredIds.length === 0 && (
+              <p className='mt-3 text-sm font-medium text-primary fade-in-up'>✗ {starError}</p>
+            )}
           </section>
 
           {customDecks.length === 0 && (
