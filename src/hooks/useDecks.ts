@@ -8,7 +8,11 @@ import {
   deleteCustomDeck as storageDeleteDeck,
 } from "@/lib/storage";
 import { builtinDeck } from "@/lib/builtinDeck";
+import { builtinAlgorithmsDeck } from "@/lib/builtinAlgorithmsDeck";
+import { builtinCsFundamentalsDeck } from "@/lib/builtinCsFundamentalsDeck";
 import { generateId, deriveCategoriesFromCards } from "@/lib/utils";
+
+const BUILTIN_DECKS = [builtinDeck, builtinAlgorithmsDeck, builtinCsFundamentalsDeck];
 
 export function useDecks() {
   const [customDecks, setCustomDecks] = useState<Deck[]>([]);
@@ -19,7 +23,7 @@ export function useDecks() {
     setHydrated(true);
   }, []);
 
-  const allDecks: Deck[] = [builtinDeck, ...customDecks];
+  const allDecks: Deck[] = [...BUILTIN_DECKS, ...customDecks];
 
   const getDeckById = useCallback(
     (id: string): Deck | undefined => {
@@ -109,6 +113,25 @@ export function useDecks() {
     []
   );
 
+  const duplicateDeck = useCallback(
+    (deckId: string): Deck | null => {
+      const original = getDeckById(deckId);
+      if (!original) return null;
+      const deck: Deck = {
+        ...original,
+        id: generateId(),
+        name: `${original.name} (copy)`,
+        createdAt: new Date().toISOString(),
+        isBuiltIn: false,
+        cards: original.cards.map((c) => ({ ...c, id: generateId() })),
+      };
+      upsertCustomDeck(deck);
+      setCustomDecks(getCustomDecks());
+      return deck;
+    },
+    [getDeckById]
+  );
+
   return {
     allDecks,
     customDecks,
@@ -117,6 +140,7 @@ export function useDecks() {
     createDeck,
     updateDeck,
     deleteDeck,
+    duplicateDeck,
     addCardToDeck,
     updateCardInDeck,
     deleteCardFromDeck,

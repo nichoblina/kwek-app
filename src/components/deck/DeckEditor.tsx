@@ -1,14 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import type { Deck, SimpleCard } from '@/lib/types';
-import { generateId, getCategoryLabel } from '@/lib/utils';
+import { generateId, getCategoryLabel, hasCloze } from '@/lib/utils';
+import { RichTextArea, type RichTextAreaRef } from '@/components/ui/RichTextArea';
 
 const LETTERS = ['A', 'B', 'C', 'D'] as const;
 
 interface CardFormState {
-  front: string;
-  back: string;
   category: string;
   showQuiz: boolean;
   options: [string, string, string, string];
@@ -18,8 +17,6 @@ interface CardFormState {
 
 function emptyCardForm(): CardFormState {
   return {
-    front: '',
-    back: '',
     category: '',
     showQuiz: false,
     options: ['', '', '', ''],
@@ -43,6 +40,8 @@ export function DeckEditor({ deck, onSave, onCancel }: DeckEditorProps) {
   const [cardForm, setCardForm] = useState<CardFormState>(emptyCardForm());
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const frontRef = useRef<RichTextAreaRef>(null);
+  const backRef = useRef<RichTextAreaRef>(null);
 
   function validate(): boolean {
     const errs: Record<string, string> = {};
@@ -68,9 +67,14 @@ export function DeckEditor({ deck, onSave, onCancel }: DeckEditorProps) {
   }
 
   function saveCardForm() {
+    const { text: front, isHtml: frontIsHtml } = frontRef.current?.getContent() ?? { text: '', isHtml: false };
+    const { text: back, isHtml: backIsHtml } = backRef.current?.getContent() ?? { text: '', isHtml: false };
+    const cardIsHtml = frontIsHtml || backIsHtml || undefined;
+
+    const isCloze = hasCloze(front.trim());
     const cardErrors: Record<string, string> = {};
-    if (!cardForm.front.trim()) cardErrors.front = 'Front is required.';
-    if (!cardForm.back.trim()) cardErrors.back = 'Back is required.';
+    if (!front.trim()) cardErrors.front = 'Front is required.';
+    if (!back.trim() && !isCloze) cardErrors.back = 'Back is required.';
     if (cardForm.showQuiz) {
       if (!cardForm.options[0].trim()) {
         cardErrors.opt0 = 'Option A is required.';
@@ -95,8 +99,9 @@ export function DeckEditor({ deck, onSave, onCancel }: DeckEditorProps) {
       id: editingCardId ?? generateId(),
       type: 'simple',
       category: cardForm.category,
-      front: cardForm.front.trim(),
-      back: cardForm.back.trim(),
+      front: front.trim(),
+      back: back.trim(),
+      ...(cardIsHtml && { isHtml: cardIsHtml }),
       ...(cardForm.showQuiz && filledOptions.length > 0 && {
         options: filledOptions,
         answerIndex: newAnswerIndex,
@@ -114,6 +119,8 @@ export function DeckEditor({ deck, onSave, onCancel }: DeckEditorProps) {
     }
 
     setCardForm(emptyCardForm());
+    frontRef.current?.setContent('');
+    backRef.current?.setContent('');
     setErrors((prev) => {
       const next = { ...prev };
       delete next.front;
@@ -130,19 +137,21 @@ export function DeckEditor({ deck, onSave, onCancel }: DeckEditorProps) {
     // Pad saved options (may be 1–4) back to 4 slots for the form
     const padded = [...(card.options ?? []), '', '', '', ''].slice(0, 4) as [string, string, string, string];
     setCardForm({
-      front: card.front,
-      back: card.back,
       category: card.category,
       showQuiz: !!(card.options && card.options.length >= 1),
       options: padded,
       answerIndex: (card.answerIndex ?? 0) as 0 | 1 | 2 | 3,
       explanation: card.explanation ?? '',
     });
+    frontRef.current?.setContent(card.front);
+    backRef.current?.setContent(card.back);
   }
 
   function cancelCardEdit() {
     setEditingCardId(null);
     setCardForm(emptyCardForm());
+    frontRef.current?.setContent('');
+    backRef.current?.setContent('');
   }
 
   function deleteCard(id: string) {
@@ -205,10 +214,10 @@ export function DeckEditor({ deck, onSave, onCancel }: DeckEditorProps) {
                 </span>
                 <div className='flex-1 min-w-0'>
                   <p className='text-sm font-semibold text-text-primary truncate'>
-                    {card.front}
+                    {card.isHtml ? card.front.replace(/<[^>]*>/g, '') : card.front}
                   </p>
                   <p className='text-xs text-muted truncate mt-0.5'>
-                    {card.back}
+                    {card.isHtml ? card.back.replace(/<[^>]*>/g, '') : card.back}
                   </p>
                   {card.options && card.options.length >= 1 && (
                     <span
@@ -254,33 +263,20 @@ export function DeckEditor({ deck, onSave, onCancel }: DeckEditorProps) {
         <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4'>
           <div>
             <label className={labelClass}>Front (Question) *</label>
-            <textarea
-              value={cardForm.front}
-              onChange={(e) =>
-                setCardForm((f) => ({ ...f, front: e.target.value }))
-              }
-              placeholder='What is...?'
-              rows={3}
-              className={`${inputClass} resize-none`}
-            />
+            <RichTextArea ref={frontRef} placeholder='What is...?' minHeight='76px' />
             {errors.front && (
               <p className='text-[0.75rem] text-primary mt-1'>{errors.front}</p>
             )}
           </div>
           <div>
             <label className={labelClass}>Back (Answer) *</label>
-            <textarea
-              value={cardForm.back}
-              onChange={(e) =>
-                setCardForm((f) => ({ ...f, back: e.target.value }))
-              }
-              placeholder='The answer is...'
-              rows={3}
-              className={`${inputClass} resize-none`}
-            />
+            <RichTextArea ref={backRef} placeholder='The answer is...' minHeight='76px' />
             {errors.back && (
               <p className='text-[0.75rem] text-primary mt-1'>{errors.back}</p>
             )}
+            <p className='text-[0.7rem] text-muted mt-1.5 font-mono'>
+              Optional if front has <span className='font-bold'>{'{{}}'}</span> blanks
+            </p>
           </div>
         </div>
 

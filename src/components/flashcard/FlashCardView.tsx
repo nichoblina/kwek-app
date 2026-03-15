@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { Card, ConfidenceRating } from "@/lib/types";
+import type { Card, ConfidenceRating, SimpleCard } from "@/lib/types";
 import { isFullCard } from "@/lib/types";
+import { hasCloze, blankAllCloze, getClozeAnswers } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -49,9 +50,15 @@ export function FlashCardView({
         onNext();
       } else if (e.code === "ArrowLeft") {
         onPrev();
+      } else if (e.code === "KeyE" && flipped) {
+        onConfidence("easy");
+        onNext();
+      } else if (e.code === "KeyH" && flipped) {
+        onConfidence("hard");
+        onNext();
       }
     },
-    [onNext, onPrev]
+    [onNext, onPrev, onConfidence, flipped]
   );
 
   useEffect(() => {
@@ -59,9 +66,16 @@ export function FlashCardView({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
-  const frontContent = card.front;
-  const backContent = isFullCard(card) ? card.explanation : card.back;
-  const isHtml = card.type === "full";
+  const rawFront = card.front;
+  const isClozeCard = !isFullCard(card) && hasCloze(rawFront);
+  const frontContent = isClozeCard ? blankAllCloze(rawFront) : rawFront;
+  const clozeAnswers = isClozeCard ? getClozeAnswers(rawFront) : [];
+  const backContent = isClozeCard
+    ? clozeAnswers.length === 1
+      ? clozeAnswers[0]
+      : clozeAnswers.map((a, i) => `${i + 1}. ${a}`).join("\n")
+    : isFullCard(card) ? card.explanation : card.back;
+  const isHtml = isFullCard(card) ? true : (card as SimpleCard).isHtml ?? false;
   const confidence = existingConfidence;
 
   return (
@@ -165,7 +179,7 @@ export function FlashCardView({
         <div className="flex gap-3 justify-center">
           <button
             onClick={() => { onConfidence("hard"); onNext(); }}
-            className="flex-1 max-w-[160px] py-2.5 rounded-xl border-[1.5px] font-semibold text-sm transition-all duration-150 cursor-pointer hover:opacity-80"
+            className="flex-1 max-w-[160px] py-2.5 rounded-xl border-[1.5px] font-semibold text-sm transition-all duration-150 cursor-pointer hover:opacity-80 flex items-center justify-center gap-2"
             style={{
               borderColor: "var(--color-primary)",
               background: confidence === "hard" ? "var(--color-primary)" : "rgba(232,114,26,0.07)",
@@ -173,10 +187,14 @@ export function FlashCardView({
             }}
           >
             Hard
+            <kbd className="font-mono text-[0.6rem] px-1 py-0.5 rounded opacity-60"
+              style={{ background: confidence === "hard" ? "rgba(255,255,255,0.2)" : "rgba(232,114,26,0.15)" }}>
+              H
+            </kbd>
           </button>
           <button
             onClick={() => { onConfidence("easy"); onNext(); }}
-            className="flex-1 max-w-[160px] py-2.5 rounded-xl border-[1.5px] font-semibold text-sm transition-all duration-150 cursor-pointer hover:opacity-80"
+            className="flex-1 max-w-[160px] py-2.5 rounded-xl border-[1.5px] font-semibold text-sm transition-all duration-150 cursor-pointer hover:opacity-80 flex items-center justify-center gap-2"
             style={{
               borderColor: "var(--color-green)",
               background: confidence === "easy" ? "var(--color-green)" : "rgba(42,157,92,0.07)",
@@ -184,6 +202,10 @@ export function FlashCardView({
             }}
           >
             Easy
+            <kbd className="font-mono text-[0.6rem] px-1 py-0.5 rounded opacity-60"
+              style={{ background: confidence === "easy" ? "rgba(255,255,255,0.2)" : "rgba(42,157,92,0.15)" }}>
+              E
+            </kbd>
           </button>
         </div>
       </div>

@@ -20,6 +20,9 @@
   /* CTA button colour — dark in light/pink themes, primary in dark theme */
   --color-cta: var(--color-text-primary);
   --color-cta-text: var(--color-bg);
+  /* Score card — stays dark across all themes */
+  --color-score-card: #1a1814;
+  --color-score-card-text: #f7f4ef;
 }
 
 body {
@@ -83,6 +86,8 @@ html.dark {
   --color-surface: #2a2520;
   --color-cta: var(--color-primary);
   --color-cta-text: #ffffff;
+  --color-score-card: #2a2520;
+  --color-score-card-text: #f7f4ef;
 }
 
 /* ── Pink theme ────────────────────────────────────────────────────────────── */
@@ -95,4 +100,6 @@ html.pink {
   --color-primary: #e84d8a;
   --color-secondary: #9b59b6;
   --color-surface: #fce4ee;
+  --color-score-card: #3d1a28;
+  --color-score-card-text: #fdf0f5;
 }

@@ -10,6 +10,8 @@ interface ScoreSummaryProps {
   deckId: string;
   deckName: string;
   onRestart: () => void;
+  backHref?: string;
+  backLabel?: string;
 }
 
 export function ScoreSummary({
@@ -18,13 +20,15 @@ export function ScoreSummary({
   deckId,
   deckName,
   onRestart,
+  backHref,
+  backLabel,
 }: ScoreSummaryProps) {
   const pct = total === 0 ? 0 : Math.round((score / total) * 100);
   const tier = getScoreTier(score, total);
   const incorrect = total - score;
 
   return (
-    <div className="rounded-2xl p-8 mb-6 bg-text-primary text-bg animate-[fadeInUp_0.3s_ease]">
+    <div className="rounded-2xl p-8 mb-6 animate-[fadeInUp_0.3s_ease]" style={{ background: "var(--color-score-card)", color: "var(--color-score-card-text)" }}>
       <div
         className="text-[3.5rem] font-extrabold leading-none tracking-tight"
         style={{ color: tier.color }}
@@ -50,18 +54,19 @@ export function ScoreSummary({
       <div className="flex gap-3 mt-6 flex-wrap">
         <button
           onClick={onRestart}
-          className="flex items-center gap-2 px-5 py-2 rounded-lg font-bold text-sm cursor-pointer transition-opacity hover:opacity-80 bg-bg text-text-primary"
+          className="flex items-center gap-2 px-5 py-2 rounded-lg font-bold text-sm cursor-pointer transition-opacity hover:opacity-80"
+          style={{ background: "var(--color-score-card-text)", color: "var(--color-score-card)" }}
         >
           <RotateCcw size={14} strokeWidth={2.5} />
           Retake Quiz
         </button>
         <Link
-          href={`/decks/${deckId}`}
+          href={backHref ?? `/decks/${deckId}`}
           className="flex items-center gap-1.5 px-5 py-2 rounded-lg font-bold text-sm transition-opacity hover:opacity-80 text-bg"
           style={{ background: "rgba(255,255,255,0.12)" }}
         >
           <ChevronLeft size={14} strokeWidth={2.5} />
-          Back to {deckName}
+          {backLabel ?? `Back to ${deckName}`}
         </Link>
       </div>
     </div>

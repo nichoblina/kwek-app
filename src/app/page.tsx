@@ -6,13 +6,15 @@ import { SettingsModal } from '@/components/SettingsModal';
 import { useDecks } from '@/hooks/useDecks';
 import { DeckGrid } from '@/components/deck/DeckGrid';
 import { getCategoryColor, getCategoryLabel } from '@/lib/utils';
-import { Settings2 } from 'lucide-react';
+import { Settings2, Plus } from 'lucide-react';
+import { useStarredDecks } from '@/hooks/useStarredDecks';
 
 const LEGEND_LIMIT = 5;
 
 export default function Home() {
   // Initialize decks
   const { allDecks, customDecks, hydrated } = useDecks();
+  const { starredIds, starError } = useStarredDecks();
 
   useEffect(() => { document.title = "kwek"; }, []);
 
@@ -87,32 +89,41 @@ export default function Home() {
             </button>
             <Link
               href='/decks/new'
-              className='px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-150 shrink-0 bg-cta text-cta-text hover:opacity-80 border-[1.5px] border-transparent'
+              className='flex items-center gap-1.5 px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-150 shrink-0 bg-cta text-cta-text hover:opacity-80 border-[1.5px] border-transparent'
             >
-              + New Deck
+              <Plus size={15} strokeWidth={2.5} />
+              New Deck
             </Link>
           </div>
         </div>
 
         {/* Category legend */}
         {hydrated && categories.length > 0 && (
-          <div className='flex gap-5 mt-5 flex-wrap'>
-            {categories.slice(0, LEGEND_LIMIT).map((cat) => (
-              <div key={cat} className='flex items-center gap-1.5'>
-                <span
-                  className='w-2.5 h-2.5 rounded-full'
-                  style={{ background: getCategoryColor(cat) }}
-                />
+          <div className='flex items-center justify-between mt-5 gap-3 flex-wrap'>
+            <div className='flex gap-5 flex-wrap'>
+              {categories.slice(0, LEGEND_LIMIT).map((cat) => (
+                <div key={cat} className='flex items-center gap-1.5'>
+                  <span
+                    className='w-2.5 h-2.5 rounded-full'
+                    style={{ background: getCategoryColor(cat) }}
+                  />
+                  <span className='text-[0.8rem] font-semibold text-muted'>
+                    {getCategoryLabel(cat)}
+                  </span>
+                </div>
+              ))}
+              {categories.length > LEGEND_LIMIT && (
                 <span className='text-[0.8rem] font-semibold text-muted'>
-                  {getCategoryLabel(cat)}
+                  +{categories.length - LEGEND_LIMIT} more
                 </span>
-              </div>
-            ))}
-            {categories.length > LEGEND_LIMIT && (
-              <span className='text-[0.8rem] font-semibold text-muted'>
-                +{categories.length - LEGEND_LIMIT} more
-              </span>
-            )}
+              )}
+            </div>
+            <Link
+              href='/study'
+              className='font-mono text-[0.7rem] font-semibold uppercase tracking-widest text-muted hover:text-text-primary transition-colors shrink-0'
+            >
+              → Study by category
+            </Link>
           </div>
         )}
       </div>
@@ -186,11 +197,33 @@ export default function Home() {
         <div className='text-muted text-sm font-medium'>Loading decks…</div>
       ) : (
         <>
+          {/* Pinned decks */}
+          {starredIds.length > 0 && (
+            <section className='mb-8'>
+              <h2 className='font-mono text-[0.7rem] font-semibold uppercase tracking-widest text-muted mb-4'>
+                Pinned ({starredIds.length}/3)
+              </h2>
+              <DeckGrid
+                decks={allDecks.filter((d) => starredIds.includes(d.id))}
+                showEmptyState={false}
+              />
+              {starError && (
+                <p className='mt-3 text-sm font-medium text-primary fade-in-up'>✗ {starError}</p>
+              )}
+            </section>
+          )}
+
           <section className='mb-8'>
             <h2 className='font-mono text-[0.7rem] font-semibold uppercase tracking-widest text-muted mb-4'>
-              All Decks ({filteredDecks.length})
+              All Decks ({filteredDecks.filter((d) => !starredIds.includes(d.id)).length})
             </h2>
-            <DeckGrid decks={filteredDecks} showEmptyState={false} />
+            <DeckGrid
+              decks={filteredDecks.filter((d) => !starredIds.includes(d.id))}
+              showEmptyState={false}
+            />
+            {starError && starredIds.length === 0 && (
+              <p className='mt-3 text-sm font-medium text-primary fade-in-up'>✗ {starError}</p>
+            )}
           </section>
 
           {customDecks.length === 0 && (
@@ -200,9 +233,10 @@ export default function Home() {
               </p>
               <Link
                 href='/decks/new'
-                className='inline-block px-5 py-2 rounded-xl font-bold text-sm transition-all duration-150 hover:opacity-80 bg-cta text-cta-text'
+                className='inline-flex items-center gap-1.5 px-5 py-2 rounded-xl font-bold text-sm transition-all duration-150 hover:opacity-80 bg-cta text-cta-text'
               >
-                + Create Deck
+                <Plus size={15} strokeWidth={2.5} />
+                Create Deck
               </Link>
             </div>
           )}
