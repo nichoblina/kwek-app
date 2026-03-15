@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { Card, ConfidenceRating } from "@/lib/types";
+import type { Card, ConfidenceRating, SimpleCard } from "@/lib/types";
 import { isFullCard } from "@/lib/types";
+import { hasCloze, blankAllCloze, getClozeAnswers } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -65,9 +66,16 @@ export function FlashCardView({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
-  const frontContent = card.front;
-  const backContent = isFullCard(card) ? card.explanation : card.back;
-  const isHtml = card.type === "full";
+  const rawFront = card.front;
+  const isClozeCard = !isFullCard(card) && hasCloze(rawFront);
+  const frontContent = isClozeCard ? blankAllCloze(rawFront) : rawFront;
+  const clozeAnswers = isClozeCard ? getClozeAnswers(rawFront) : [];
+  const backContent = isClozeCard
+    ? clozeAnswers.length === 1
+      ? clozeAnswers[0]
+      : clozeAnswers.map((a, i) => `${i + 1}. ${a}`).join("\n")
+    : isFullCard(card) ? card.explanation : card.back;
+  const isHtml = isFullCard(card) ? true : (card as SimpleCard).isHtml ?? false;
   const confidence = existingConfidence;
 
   return (

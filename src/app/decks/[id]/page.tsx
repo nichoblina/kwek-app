@@ -7,7 +7,8 @@ import { useDecks } from "@/hooks/useDecks";
 import { Badge, CategoryDot } from "@/components/ui/Badge";
 import { exportDeck } from "@/lib/importExport";
 import { isFullCard } from "@/lib/types";
-import { ArrowDownCircle, Layers, PenLine, ArrowRight, Copy, Search, X } from "lucide-react";
+import { InlineCardEditor } from "@/components/deck/InlineCardEditor";
+import { ArrowDownCircle, Layers, PenLine, ArrowRight, Copy, Search, X, Pencil } from "lucide-react";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -16,11 +17,12 @@ interface PageProps {
 export default function DeckDetailPage({ params }: PageProps) {
   const { id } = use(params);
   const router = useRouter();
-  const { getDeckById, hydrated, duplicateDeck } = useDecks();
+  const { getDeckById, hydrated, duplicateDeck, updateCardInDeck } = useDecks();
   const deck = getDeckById(id);
 
   const [search, setSearch] = useState("");
   const [duplicating, setDuplicating] = useState(false);
+  const [editingCardId, setEditingCardId] = useState<string | null>(null);
 
   useEffect(() => {
     if (deck) document.title = `${deck.name} · kwek`;
@@ -253,13 +255,35 @@ export default function DeckDetailPage({ params }: PageProps) {
               )}
               {filteredCards.map((card) => {
                 const back = isFullCard(card) ? card.explanation : card.back;
+                const cardIsHtml = isFullCard(card) || (!isFullCard(card) && !!card.isHtml);
+                const stripHtml = (html: string) => html.replace(/<[^>]*>/g, "");
+
+                if (editingCardId === card.id && !isFullCard(card)) {
+                  return (
+                    <InlineCardEditor
+                      key={card.id}
+                      card={card}
+                      onSave={(front, back, isHtml) => {
+                        updateCardInDeck(deck.id, {
+                          ...card,
+                          front,
+                          back,
+                          isHtml: isHtml || undefined,
+                        });
+                        setEditingCardId(null);
+                      }}
+                      onCancel={() => setEditingCardId(null)}
+                    />
+                  );
+                }
+
                 return (
                   <div
                     key={card.id}
-                    className="bg-card border-[1.5px] border-border rounded-xl px-4 py-3 flex gap-4 items-start"
+                    className="group bg-card border-[1.5px] border-border rounded-xl px-4 py-3 flex gap-4 items-start"
                   >
                     <div className="flex-1 min-w-0">
-                      {isFullCard(card) ? (
+                      {cardIsHtml ? (
                         <p
                           className="text-sm font-semibold text-text-primary leading-snug line-clamp-2"
                           dangerouslySetInnerHTML={{ __html: card.front }}
@@ -271,13 +295,22 @@ export default function DeckDetailPage({ params }: PageProps) {
                       )}
                       {back && (
                         <p className="text-xs text-muted mt-1 leading-relaxed line-clamp-2">
-                          {isFullCard(card)
-                            ? back.replace(/<[^>]*>/g, "")
-                            : back}
+                          {cardIsHtml ? stripHtml(back) : back}
                         </p>
                       )}
                     </div>
-                    <Badge category={card.category} size="sm" />
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge category={card.category} size="sm" />
+                      {!deck.isBuiltIn && !isFullCard(card) && (
+                        <button
+                          onClick={() => setEditingCardId(card.id)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-muted hover:text-text-primary cursor-pointer"
+                          title="Edit card"
+                        >
+                          <Pencil size={13} strokeWidth={2.5} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}

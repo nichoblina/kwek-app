@@ -43,6 +43,7 @@ function CrossDeckQuizInner() {
     );
     return { sessionCards: cards, cardDeckMap: map };
   }, [allDecks, selectedCats]);
+  // cardDeckMap is keyed by card.id; cloze questions use originalCardId to look up the right entry
 
   const [selectedTypes, setSelectedTypes] = useState<QuestionType[] | null>(null);
   const [randomize, setRandomize] = useState(false);
@@ -68,7 +69,7 @@ function CrossDeckQuizInner() {
   const questions = useMemo(() => {
     if (!activeCategory) return allQuestions;
     return allQuestions.filter((q) => {
-      const card = sessionCards.find((c) => c.id === q.cardId);
+      const card = sessionCards.find((c) => c.id === (q.originalCardId ?? q.cardId));
       return card?.category === activeCategory;
     });
   }, [allQuestions, activeCategory, sessionCards]);
@@ -192,9 +193,9 @@ function CrossDeckQuizInner() {
           ) : (
             questions.map((question, idx) => (
               <div key={question.cardId}>
-                {cardDeckMap[question.cardId] && (
+                {cardDeckMap[question.originalCardId ?? question.cardId] && (
                   <p className="text-[0.7rem] font-mono font-semibold text-muted mt-5 mb-1">
-                    {cardDeckMap[question.cardId]}
+                    {cardDeckMap[question.originalCardId ?? question.cardId]}
                   </p>
                 )}
                 <QuizCardView

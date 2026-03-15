@@ -128,6 +128,49 @@ export function QuizCardView({
     );
   }
 
+  function renderCloze() {
+    const handleSubmit = () => {
+      const trimmed = typedText.trim();
+      if (!trimmed) return;
+      const correct = trimmed.toLowerCase() === question.correctAnswer.trim().toLowerCase();
+      onAnswer(trimmed, correct);
+    };
+
+    return (
+      <div>
+        {isAnswered ? (
+          <div className="px-4 py-3 rounded-xl border-[1.5px] border-border bg-bg text-sm font-medium text-text-primary">
+            {answered?.value as string}
+          </div>
+        ) : (
+          <>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={typedText}
+                onChange={(e) => setTypedText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                placeholder="Fill in the blank…"
+                autoFocus
+                className="flex-1 px-4 py-3 rounded-xl border-[1.5px] border-border bg-bg text-sm font-medium focus:outline-none focus:border-primary transition-colors"
+              />
+              <button
+                onClick={handleSubmit}
+                disabled={!typedText.trim()}
+                className="px-5 py-3 rounded-xl bg-cta text-cta-text font-bold text-sm hover:opacity-80 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Submit
+              </button>
+            </div>
+            <p className="text-[0.7rem] text-muted mt-2 font-mono">
+              Case-insensitive · Press Enter to submit
+            </p>
+          </>
+        )}
+      </div>
+    );
+  }
+
   function renderIdentification() {
     const handleSubmit = () => {
       const trimmed = typedText.trim();
@@ -185,7 +228,7 @@ export function QuizCardView({
           Q{questionNumber}
         </span>
         <span className="font-mono text-[0.6rem] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-surface text-muted">
-          {question.type === "mc" ? "Multiple Choice" : question.type === "tf" ? "True / False" : "Identification"}
+          {question.type === "mc" ? "Multiple Choice" : question.type === "tf" ? "True / False" : question.type === "cloze" ? "Fill in the Blank" : "Identification"}
         </span>
         <span className="font-mono text-[0.6rem] text-muted ml-auto">
           {questionNumber} / {total}
@@ -199,6 +242,7 @@ export function QuizCardView({
       {question.type === "mc" && renderMC()}
       {question.type === "tf" && renderTF()}
       {question.type === "identification" && renderIdentification()}
+      {question.type === "cloze" && renderCloze()}
 
       {/* Explanation */}
       {isAnswered && (
