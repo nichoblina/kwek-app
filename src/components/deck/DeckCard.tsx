@@ -26,10 +26,10 @@ export function DeckCard({ deck }: DeckCardProps) {
   ).length;
 
   return (
-    <div className="relative group/card">
+    <div className="relative group/card h-full">
       <Link
         href={`/decks/${deck.id}`}
-        className="block bg-card border-[1.5px] border-border rounded-2xl p-6 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 group pr-12"
+        className="flex flex-col h-full bg-card border-[1.5px] border-border rounded-2xl p-6 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 group pr-12"
       >
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0">
@@ -66,7 +66,7 @@ export function DeckCard({ deck }: DeckCardProps) {
         </div>
 
         {/* Category dots */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap mt-auto">
           {deck.categories.map((cat) => (
             <div key={cat} className="flex items-center gap-1.5">
               <span
