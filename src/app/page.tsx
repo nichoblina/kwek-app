@@ -99,23 +99,31 @@ export default function Home() {
 
         {/* Category legend */}
         {hydrated && categories.length > 0 && (
-          <div className='flex gap-5 mt-5 flex-wrap'>
-            {categories.slice(0, LEGEND_LIMIT).map((cat) => (
-              <div key={cat} className='flex items-center gap-1.5'>
-                <span
-                  className='w-2.5 h-2.5 rounded-full'
-                  style={{ background: getCategoryColor(cat) }}
-                />
+          <div className='flex items-center justify-between mt-5 gap-3 flex-wrap'>
+            <div className='flex gap-5 flex-wrap'>
+              {categories.slice(0, LEGEND_LIMIT).map((cat) => (
+                <div key={cat} className='flex items-center gap-1.5'>
+                  <span
+                    className='w-2.5 h-2.5 rounded-full'
+                    style={{ background: getCategoryColor(cat) }}
+                  />
+                  <span className='text-[0.8rem] font-semibold text-muted'>
+                    {getCategoryLabel(cat)}
+                  </span>
+                </div>
+              ))}
+              {categories.length > LEGEND_LIMIT && (
                 <span className='text-[0.8rem] font-semibold text-muted'>
-                  {getCategoryLabel(cat)}
+                  +{categories.length - LEGEND_LIMIT} more
                 </span>
-              </div>
-            ))}
-            {categories.length > LEGEND_LIMIT && (
-              <span className='text-[0.8rem] font-semibold text-muted'>
-                +{categories.length - LEGEND_LIMIT} more
-              </span>
-            )}
+              )}
+            </div>
+            <Link
+              href='/study'
+              className='font-mono text-[0.7rem] font-semibold uppercase tracking-widest text-muted hover:text-text-primary transition-colors shrink-0'
+            >
+              → Study by category
+            </Link>
           </div>
         )}
       </div>
