@@ -28,8 +28,22 @@ export function getCategoryColor(cat: Category): string {
   return palette[hash % palette.length];
 }
 
+const CATEGORY_LABEL_OVERRIDES: Record<string, string> = {
+  cs: "CS",
+  jpa: "JPA",
+  devsecops: "DevSecOps",
+  sql: "SQL",
+  os: "OS",
+  api: "API",
+};
+
 export function getCategoryLabel(cat: Category): string {
-  return cat.charAt(0).toUpperCase() + cat.slice(1);
+  const lower = cat.toLowerCase();
+  if (CATEGORY_LABEL_OVERRIDES[lower]) return CATEGORY_LABEL_OVERRIDES[lower];
+  return cat
+    .split(/[-_]/)
+    .map((w) => CATEGORY_LABEL_OVERRIDES[w.toLowerCase()] ?? (w.charAt(0).toUpperCase() + w.slice(1)))
+    .join(" ");
 }
 
 export function deriveCategoriesFromCards(
@@ -130,7 +144,7 @@ export function generateQuestionsForDeck(
         options: allOptions,
         answerIndex,
         explanation: correctAnswer,
-        isHtml: false, // auto-generated options are always plain text
+        isHtml: cardIsHtml, // question text may be HTML; options are plain text but render safely
         isGenerated: true,
       };
     }
