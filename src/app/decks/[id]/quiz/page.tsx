@@ -44,7 +44,7 @@ export default function QuizPage({ params }: PageProps) {
   const questions = useMemo(() => {
     if (!activeCategory) return allQuestions;
     return allQuestions.filter((q) => {
-      const card = deck?.cards.find((c) => c.id === q.cardId);
+      const card = deck?.cards.find((c) => c.id === (q.originalCardId ?? q.cardId));
       return card?.category === activeCategory;
     });
   }, [allQuestions, activeCategory, deck]);
