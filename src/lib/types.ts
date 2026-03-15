@@ -1,9 +1,10 @@
 export type Category = string;
 export type Theme = 'default' | 'dark' | 'pink';
-export type QuestionType = "mc" | "tf" | "identification";
+export type QuestionType = "mc" | "tf" | "identification" | "cloze";
 
 export interface GeneratedQuestion {
   cardId: string;
+  originalCardId?: string;   // cloze only: the source card.id (cardId is compound for cloze)
   type: QuestionType;
   question: string;          // card.front (or card.question for FullCard)
   correctAnswer: string;     // card.back (or correct option for FullCard)
@@ -53,8 +54,9 @@ export interface SimpleCard {
   id: string;
   type: "simple";
   category: Category;
-  front: string;       // plain text
-  back: string;        // plain text
+  front: string;       // plain text, or HTML when isHtml is true
+  back: string;        // plain text, or HTML when isHtml is true
+  isHtml?: boolean;    // true when front/back contain HTML from inline formatting
   options?: string[];  // 1 = identification, 2–4 = multiple choice
   answerIndex?: number;
   explanation?: string;

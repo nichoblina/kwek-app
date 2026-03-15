@@ -1,4 +1,4 @@
-import type { Card, Category, GeneratedQuestion, QuestionType } from "./types";
+import type { Card, Category, GeneratedQuestion, QuestionType, SimpleCard } from "./types";
 import { isFullCard, hasQuizData } from "./types";
 
 export function generateId(): string {
@@ -52,6 +52,41 @@ export function deriveCategoriesFromCards(
   return [...new Set(cards.map((c) => c.category))];
 }
 
+// ─── Cloze helpers ────────────────────────────────────────────────────────────
+
+/** Returns true if the text contains at least one {{answer}} marker. */
+export function hasCloze(text: string): boolean {
+  return /\{\{.+?\}\}/.test(text);
+}
+
+/** Extracts all answers from {{answer}} markers in order. */
+export function getClozeAnswers(text: string): string[] {
+  return [...text.matchAll(/\{\{(.+?)\}\}/g)].map((m) => m[1]);
+}
+
+/** Replaces all {{answer}} markers with ____. */
+export function blankAllCloze(text: string): string {
+  return text.replace(/\{\{.+?\}\}/g, "____");
+}
+
+/**
+ * Blanks only the targetIdx-th {{answer}} marker, revealing all others.
+ * e.g. blankClozeAtIndex("{{A}} and {{B}}", 0) → "____ and B"
+ */
+export function blankClozeAtIndex(text: string, targetIdx: number): string {
+  let count = 0;
+  return text.replace(/\{\{(.+?)\}\}/g, (_, answer) =>
+    count++ === targetIdx ? "____" : answer
+  );
+}
+
+/** Removes all {{...}} wrappers, leaving just the answer text. */
+export function revealCloze(text: string): string {
+  return text.replace(/\{\{(.+?)\}\}/g, "$1");
+}
+
+// ─── Question generator ───────────────────────────────────────────────────────
+
 export function generateQuestionsForDeck(
   cards: Card[],
   preferredTypes: QuestionType[] = ["mc", "tf", "identification"],
@@ -66,7 +101,24 @@ export function generateQuestionsForDeck(
     return c.back;
   });
 
-  return cards.map((card, idx) => {
+  return cards.flatMap((card, idx): GeneratedQuestion[] => {
+    // ── Cloze cards: always generate one question per blank ─────────────────
+    // Only applies to plain SimpleCards without manual quiz options.
+    if (!isFullCard(card) && !hasQuizData(card) && hasCloze(card.front)) {
+      const clozeAnswers = getClozeAnswers(card.front);
+      const cardIsHtml = !!(card as SimpleCard).isHtml;
+      return clozeAnswers.map((answer, clozeIdx) => ({
+        cardId: `${card.id}:cloze:${clozeIdx}`,
+        originalCardId: card.id,
+        type: "cloze" as QuestionType,
+        question: blankClozeAtIndex(card.front, clozeIdx),
+        correctAnswer: answer,
+        explanation: revealCloze(card.front),
+        isHtml: cardIsHtml,
+        isGenerated: true,
+      }));
+    }
+
     // ── Cards with manual quiz data ───────────────────────────────────────────
     // Lock to manual type only when a single type is selected (includes "Your Quiz" / MC-only).
     // Mixed / Randomized (preferredTypes.length > 1) lets all cards rotate freely.
@@ -80,7 +132,7 @@ export function generateQuestionsForDeck(
 
       // 1 option → identification; 2+ options → multiple choice
       if (options.length === 1) {
-        return {
+        return [{
           cardId: card.id,
           type: "identification" as QuestionType,
           question,
@@ -88,10 +140,10 @@ export function generateQuestionsForDeck(
           explanation: explanation ?? correctAnswer,
           isHtml,
           isGenerated: false,
-        };
+        }];
       }
 
-      return {
+      return [{
         cardId: card.id,
         type: "mc" as QuestionType,
         question,
@@ -101,7 +153,7 @@ export function generateQuestionsForDeck(
         explanation,
         isHtml,
         isGenerated: false,
-      };
+      }];
     }
 
     // ── Auto-generate (plain cards, overridden full cards, or mixed-mode quiz-data cards) ──
@@ -114,13 +166,16 @@ export function generateQuestionsForDeck(
     const explanation = isFullCard(card)
       ? card.explanation
       : (card.explanation ?? card.back);
-    const cardIsHtml = isFullCard(card);
+    const cardIsHtml = isFullCard(card) || !!(card as SimpleCard).isHtml;
 
-    const otherAnswers = allAnswers.filter((_, i) => i !== idx);
+    // Exclude the current card AND any empty-back cards (e.g. cloze cards with no back)
+    const otherAnswers = allAnswers.filter((ans, i) => i !== idx && ans.trim() !== "");
     const canDoMC = otherAnswers.length >= 1;
 
     // Determine available types based on preference and deck size
+    // (exclude "cloze" from auto-gen rotation — cloze is always explicit)
     const available = preferredTypes.filter((t) => {
+      if (t === "cloze") return false;
       if (t === "mc") return canDoMC;
       if (t === "tf") return otherAnswers.length >= 1;
       return true; // identification always possible
@@ -136,7 +191,7 @@ export function generateQuestionsForDeck(
       const distractors = shuffleArray(otherAnswers).slice(0, Math.min(3, otherAnswers.length));
       const allOptions = shuffleArray([correctAnswer, ...distractors]);
       const answerIndex = allOptions.indexOf(correctAnswer);
-      return {
+      return [{
         cardId: card.id,
         type: "mc",
         question,
@@ -146,7 +201,7 @@ export function generateQuestionsForDeck(
         explanation: correctAnswer,
         isHtml: cardIsHtml, // question text may be HTML; options are plain text but render safely
         isGenerated: true,
-      };
+      }];
     }
 
     if (type === "tf") {
@@ -155,7 +210,7 @@ export function generateQuestionsForDeck(
         ? correctAnswer
         : shuffleArray(otherAnswers)[0] ?? correctAnswer;
       const isActuallyTrue = displayedAnswer === correctAnswer;
-      return {
+      return [{
         cardId: card.id,
         type: "tf",
         question,
@@ -166,11 +221,11 @@ export function generateQuestionsForDeck(
         explanation,
         isHtml: cardIsHtml,
         isGenerated: true,
-      };
+      }];
     }
 
     // identification
-    return {
+    return [{
       cardId: card.id,
       type: "identification",
       question,
@@ -178,7 +233,7 @@ export function generateQuestionsForDeck(
       explanation,
       isHtml: cardIsHtml,
       isGenerated: true,
-    };
+    }];
   });
 }
 
