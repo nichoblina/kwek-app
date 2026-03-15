@@ -8,7 +8,11 @@ import {
   deleteCustomDeck as storageDeleteDeck,
 } from "@/lib/storage";
 import { builtinDeck } from "@/lib/builtinDeck";
+import { builtinAlgorithmsDeck } from "@/lib/builtinAlgorithmsDeck";
+import { builtinCsFundamentalsDeck } from "@/lib/builtinCsFundamentalsDeck";
 import { generateId, deriveCategoriesFromCards } from "@/lib/utils";
+
+const BUILTIN_DECKS = [builtinDeck, builtinAlgorithmsDeck, builtinCsFundamentalsDeck];
 
 export function useDecks() {
   const [customDecks, setCustomDecks] = useState<Deck[]>([]);
@@ -19,7 +23,7 @@ export function useDecks() {
     setHydrated(true);
   }, []);
 
-  const allDecks: Deck[] = [builtinDeck, ...customDecks];
+  const allDecks: Deck[] = [...BUILTIN_DECKS, ...customDecks];
 
   const getDeckById = useCallback(
     (id: string): Deck | undefined => {
