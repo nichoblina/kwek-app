@@ -6,7 +6,10 @@ import type { Deck } from "@/lib/types";
 import { getCategoryColor, getCategoryLabel, timeAgo } from "@/lib/utils";
 import { getLastStudied } from "@/lib/storage";
 import { useStarredDecks } from "@/hooks/useStarredDecks";
-import { Star, Clock } from "lucide-react";
+import { useReviewPlan } from "@/hooks/useReviewPlan";
+import { getSRSData } from "@/lib/storage";
+import { todayStr } from "@/lib/srs";
+import { Star, Clock, BookOpen } from "lucide-react";
 
 interface DeckCardProps {
   deck: Deck;
@@ -15,11 +18,25 @@ interface DeckCardProps {
 export function DeckCard({ deck }: DeckCardProps) {
   const { isStarred, toggleStar } = useStarredDecks();
   const starred = isStarred(deck.id);
+  const { isEnrolled, toggleEnroll } = useReviewPlan();
+  const enrolled = isEnrolled(deck.id);
   const [lastStudied, setLastStudied] = useState<string | null>(null);
+  const [dueCount, setDueCount] = useState(0);
 
   useEffect(() => {
     setLastStudied(getLastStudied(deck.id));
   }, [deck.id]);
+
+  useEffect(() => {
+    if (!enrolled) { setDueCount(0); return; }
+    const today = todayStr();
+    const srsAll = getSRSData();
+    const count = deck.cards.filter((c) => {
+      const data = srsAll[deck.id]?.[c.id];
+      return !data || data.dueDate <= today;
+    }).length;
+    setDueCount(count);
+  }, [deck.id, deck.cards.length, enrolled]);
 
   const quizCount = deck.cards.filter((c) =>
     c.type === "full" || (c.options && c.options.length === 4 && c.answerIndex !== undefined)
@@ -63,6 +80,16 @@ export function DeckCard({ deck }: DeckCardProps) {
             <span>Quiz + Flashcard</span>
           )}
           {quizCount === 0 && <span>Flashcard only</span>}
+          {enrolled && dueCount > 0 && (
+            <span className="font-semibold" style={{ color: "var(--color-secondary)" }}>
+              {dueCount} due
+            </span>
+          )}
+          {enrolled && dueCount === 0 && (
+            <span className="font-semibold" style={{ color: "var(--color-green)" }}>
+              All caught up
+            </span>
+          )}
         </div>
 
         {/* Category dots */}
@@ -91,7 +118,7 @@ export function DeckCard({ deck }: DeckCardProps) {
         )}
       </Link>
 
-      {/* Star button — outside the Link to avoid nesting issues */}
+      {/* Star button */}
       <button
         onClick={() => toggleStar(deck.id)}
         className="absolute top-4 right-4 p-1.5 rounded-lg transition-all cursor-pointer hover:bg-surface"
@@ -104,6 +131,22 @@ export function DeckCard({ deck }: DeckCardProps) {
           style={{
             fill: starred ? "var(--color-primary)" : "none",
             color: starred ? "var(--color-primary)" : "var(--color-muted)",
+          }}
+        />
+      </button>
+
+      {/* Review enroll button */}
+      <button
+        onClick={() => toggleEnroll(deck.id)}
+        className="absolute top-11 right-4 p-1.5 rounded-lg transition-all cursor-pointer hover:bg-surface"
+        aria-label={enrolled ? "Remove from review plan" : "Add to review plan"}
+      >
+        <BookOpen
+          size={16}
+          strokeWidth={2}
+          className="transition-colors"
+          style={{
+            color: enrolled ? "var(--color-secondary)" : "var(--color-muted)",
           }}
         />
       </button>

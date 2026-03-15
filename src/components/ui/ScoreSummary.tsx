@@ -2,7 +2,7 @@
 
 import { getScoreTier } from "@/lib/utils";
 import Link from "next/link";
-import { RotateCcw, ChevronLeft } from "lucide-react";
+import { RotateCcw, ChevronLeft, BookOpen } from "lucide-react";
 
 interface ScoreSummaryProps {
   score: number;
@@ -12,6 +12,8 @@ interface ScoreSummaryProps {
   onRestart: () => void;
   backHref?: string;
   backLabel?: string;
+  wrongCount?: number;
+  onReviewMistakes?: () => void;
 }
 
 export function ScoreSummary({
@@ -22,6 +24,8 @@ export function ScoreSummary({
   onRestart,
   backHref,
   backLabel,
+  wrongCount,
+  onReviewMistakes,
 }: ScoreSummaryProps) {
   const pct = total === 0 ? 0 : Math.round((score / total) * 100);
   const tier = getScoreTier(score, total);
@@ -60,6 +64,16 @@ export function ScoreSummary({
           <RotateCcw size={14} strokeWidth={2.5} />
           Retake Quiz
         </button>
+        {wrongCount != null && wrongCount > 0 && onReviewMistakes && (
+          <button
+            onClick={onReviewMistakes}
+            className="flex items-center gap-2 px-5 py-2 rounded-lg font-bold text-sm cursor-pointer transition-opacity hover:opacity-80"
+            style={{ background: "rgba(255,255,255,0.12)" }}
+          >
+            <BookOpen size={14} strokeWidth={2.5} />
+            Review {wrongCount} Mistake{wrongCount !== 1 ? "s" : ""}
+          </button>
+        )}
         <Link
           href={backHref ?? `/decks/${deckId}`}
           className="flex items-center gap-1.5 px-5 py-2 rounded-lg font-bold text-sm transition-opacity hover:opacity-80 text-bg"

@@ -6,8 +6,11 @@ import { SettingsModal } from '@/components/SettingsModal';
 import { useDecks } from '@/hooks/useDecks';
 import { DeckGrid } from '@/components/deck/DeckGrid';
 import { getCategoryColor, getCategoryLabel } from '@/lib/utils';
-import { Settings2, Plus } from 'lucide-react';
+import { Settings2, Plus, BookOpen } from 'lucide-react';
 import { useStarredDecks } from '@/hooks/useStarredDecks';
+import { useReviewPlan } from '@/hooks/useReviewPlan';
+import { getSRSData } from '@/lib/storage';
+import { todayStr } from '@/lib/srs';
 
 const LEGEND_LIMIT = 5;
 
@@ -15,8 +18,25 @@ export default function Home() {
   // Initialize decks
   const { allDecks, customDecks, hydrated } = useDecks();
   const { starredIds, starError } = useStarredDecks();
+  const { reviewDeckIds } = useReviewPlan();
+  const [totalDue, setTotalDue] = useState(0);
 
   useEffect(() => { document.title = "kwek"; }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    const today = todayStr();
+    const srsAll = getSRSData();
+    let count = 0;
+    for (const deck of allDecks) {
+      if (!reviewDeckIds.includes(deck.id)) continue;
+      for (const card of deck.cards) {
+        const data = srsAll[deck.id]?.[card.id];
+        if (!data || data.dueDate <= today) count++;
+      }
+    }
+    setTotalDue(count);
+  }, [hydrated, allDecks, reviewDeckIds]);
 
   // Initialize settings
   const [showSettings, setShowSettings] = useState(false);
@@ -87,6 +107,21 @@ export default function Home() {
               <Settings2 size={15} strokeWidth={2.5} />
               Settings
             </button>
+            <Link
+              href='/review'
+              className='relative flex items-center gap-1.5 px-5 py-2.5 rounded-xl font-bold text-sm border-[1.5px] border-border hover:border-secondary hover:bg-secondary hover:text-white transition-all'
+            >
+              <BookOpen size={15} strokeWidth={2.5} />
+              Review
+              {totalDue > 0 && (
+                <span
+                  className='absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full text-white text-[0.6rem] font-bold flex items-center justify-center'
+                  style={{ background: 'var(--color-secondary)' }}
+                >
+                  {totalDue > 99 ? '99+' : totalDue}
+                </span>
+              )}
+            </Link>
             <Link
               href='/decks/new'
               className='flex items-center gap-1.5 px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-150 shrink-0 bg-cta text-cta-text hover:opacity-80 border-[1.5px] border-transparent'
