@@ -3,6 +3,7 @@ import type {
   Deck,
   QuizProgress,
   FlashcardProgress,
+  SRSCardData,
 } from "./types";
 
 const STORAGE_KEY = "kwek_data";
@@ -14,6 +15,8 @@ const defaultStorage: KwekStorage = {
   quizProgress: {},
   flashcardProgress: {},
   starredDeckIds: [],
+  reviewDeckIds: [],
+  srsData: {},
 };
 
 function isClient(): boolean {
@@ -32,6 +35,8 @@ export function loadStorage(): KwekStorage {
     }
     // Backfill fields added after initial schema
     if (!parsed.starredDeckIds) parsed.starredDeckIds = [];
+    if (!parsed.reviewDeckIds) parsed.reviewDeckIds = [];
+    if (!parsed.srsData) parsed.srsData = {};
     return parsed;
   } catch {
     return { ...defaultStorage };
@@ -136,6 +141,41 @@ export function saveFlashcardProgress(progress: FlashcardProgress): void {
 export function clearFlashcardProgress(deckId: string): void {
   const storage = loadStorage();
   delete storage.flashcardProgress[deckId];
+  saveStorage(storage);
+}
+
+// ─── Review Plan ─────────────────────────────────────────────────────────────
+
+export function getReviewDeckIds(): string[] {
+  return loadStorage().reviewDeckIds ?? [];
+}
+
+export function toggleReviewDeck(deckId: string): void {
+  const storage = loadStorage();
+  if (!storage.reviewDeckIds) storage.reviewDeckIds = [];
+  const idx = storage.reviewDeckIds.indexOf(deckId);
+  if (idx === -1) {
+    storage.reviewDeckIds.push(deckId);
+  } else {
+    storage.reviewDeckIds.splice(idx, 1);
+  }
+  saveStorage(storage);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("kwek:review-changed"));
+  }
+}
+
+// ─── SRS Data ─────────────────────────────────────────────────────────────────
+
+export function getSRSData(): Record<string, Record<string, SRSCardData>> {
+  return loadStorage().srsData ?? {};
+}
+
+export function setSRSCardData(deckId: string, cardId: string, data: SRSCardData): void {
+  const storage = loadStorage();
+  if (!storage.srsData) storage.srsData = {};
+  if (!storage.srsData[deckId]) storage.srsData[deckId] = {};
+  storage.srsData[deckId][cardId] = data;
   saveStorage(storage);
 }
 

@@ -17,6 +17,14 @@ export interface GeneratedQuestion {
 }
 export type ConfidenceRating = "easy" | "hard";
 export type AnswerResult = "correct" | "incorrect";
+export type SRSRating = "again" | "good" | "easy";
+
+export interface SRSCardData {
+  interval: number;      // days until next review
+  easeFactor: number;    // SM-2 multiplier, starts at 2.5
+  dueDate: string;       // YYYY-MM-DD
+  repetitions: number;   // consecutive successful reviews
+}
 
 // ─── Themes ──────────────────────────────────────────────────────────────────
 export interface Settings {
@@ -118,4 +126,6 @@ export interface KwekStorage {
   quizProgress: Record<string, QuizProgress>;
   flashcardProgress: Record<string, FlashcardProgress>;
   starredDeckIds: string[];
+  reviewDeckIds: string[];
+  srsData: Record<string, Record<string, SRSCardData>>;  // [deckId][cardId]
 }
